@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "756928444258",
+    "firebase_url": "https://essentialtrailers-ba463-default-rtdb.firebaseio.com",
+    "project_id": "essentialtrailers-ba463",
+    "storage_bucket": "essentialtrailers-ba463.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:756928444258:android:60bc4452bc9f3507e9de3b",
+        "android_client_info": {
+          "package_name": "com.pitechitsolutions.essentialtrailerhire"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "756928444258-ghn8ch3p9kkf7hu4r2nkss4merubu3j7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-vJnvF68GvjGBxgsE1N3T-_R5DwT083U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "756928444258-ghn8ch3p9kkf7hu4r2nkss4merubu3j7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:756928444258:android:d6190f7d67611706e9de3b",
+        "android_client_info": {
+          "package_name": "com.pitechitsolutions.essentialtrailers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "756928444258-ghn8ch3p9kkf7hu4r2nkss4merubu3j7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-vJnvF68GvjGBxgsE1N3T-_R5DwT083U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "756928444258-ghn8ch3p9kkf7hu4r2nkss4merubu3j7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

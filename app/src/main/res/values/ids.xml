@@ -1,0 +1,19 @@
+<resources>
+    <item name="client_name" type="id" />
+    <item name="client_contact" type="id" />
+    <item name="client_email" type="id" />
+    <item name="client_license_photo" type="id" />
+    <item name="client_vehicle_photo" type="id" />
+    <item name="client_address" type="id" />
+    <item name="invoice_number" type="id" />
+    <item name="vehicle_barcode" type="id" />
+    <item name="estimated_distance" type="id" />
+    <item name="current_location" type="id" />
+    <item name="delivery_destination" type="id" />
+    <item name="trailer_remarks" type="id" />
+    <item name="booking_date" type="id" />
+    <item name="delivery_date" type="id" />
+    <item name="signature_view" type="id" />
+    <item name="terms_conditions" type="id" />
+    <item name="book_trailer" type="id" />
+</resources>

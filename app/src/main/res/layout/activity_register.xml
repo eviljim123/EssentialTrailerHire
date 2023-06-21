@@ -1,0 +1,27 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/branchEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:hint="Branch Email" />
+
+    <EditText
+        android:id="@+id/branchPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:hint="Branch Password"
+        android:layout_below="@id/branchEmail" />
+
+    <Button
+        android:id="@+id/btnRegisterBranch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Register Branch"
+        android:layout_below="@id/branchPassword" />
+</RelativeLayout>

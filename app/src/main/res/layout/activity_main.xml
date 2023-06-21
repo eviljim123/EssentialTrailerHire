@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F0F0"
+    android:padding="24dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="300dp"
+            android:layout_height="150dp"
+            android:src="@drawable/image2"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp" />
+
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/imageView"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:hint="@string/Username"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/username"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/password"
+            android:layout_marginTop="16dp"
+            android:text="@string/login"
+            android:backgroundTint="@color/orange"
+            android:textColor="#FFFFFF"
+            android:elevation="8dp" />
+
+        <TextView
+            android:id="@+id/adminTxtView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Admin Use:"
+            android:layout_below="@id/login"
+            android:layout_marginTop="16dp"/>
+
+        <EditText
+            android:id="@+id/adminPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/adminTxtView"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:hint="Admin password"
+            android:inputType="textPassword"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/adminPassword"
+            android:layout_marginTop="16dp"
+            android:text="Register"
+            android:backgroundTint="@color/orange"
+            android:textColor="#FFFFFF"
+            android:elevation="8dp" />
+
+    </RelativeLayout>
+</ScrollView>

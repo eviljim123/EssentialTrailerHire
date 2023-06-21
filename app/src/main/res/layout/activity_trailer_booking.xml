@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F0F0"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/rounded_white_bg"
+        android:padding="16dp">
+
+        <!-- Heading -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trailer Rental"
+            android:textStyle="bold"
+            android:textSize="24sp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Client Information -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rounded_white_bg"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Client Information"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="10dp"/>
+
+            <!-- Client Name & Surname -->
+            <EditText
+                android:id="@+id/client_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Client Name"/>
+
+            <EditText
+                android:id="@+id/client_surname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Client Surname"/>
+
+            <!-- Client ID Number -->
+            <EditText
+                android:id="@+id/client_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Client ID Number"/>
+
+            <!-- Client Contact Number -->
+            <EditText
+                android:id="@+id/client_contact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Client Contact Number"/>
+
+            <!-- Client Email Address -->
+            <EditText
+                android:id="@+id/client_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Client Email Address"
+                android:inputType="textEmailAddress" />
+
+            <!-- Client Drivers Licence Photo -->
+            <Button
+                android:id="@+id/client_license_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture Driver's Licence Photo"
+                android:backgroundTint="@color/orange"/>
+            <ImageView
+                android:id="@+id/client_license_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/license_placeholder"
+                android:contentDescription="Client's Driver's License Photo"
+                android:layout_marginTop="10dp"/>
+
+            <!-- Client Vehicle Disk Photo -->
+            <Button
+                android:id="@+id/client_vehicle_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture Vehicle Disk Photo"
+                android:backgroundTint="@color/orange"/>
+            <ImageView
+                android:id="@+id/client_vehicle_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/vehicle_placeholder"
+                android:contentDescription="Client's Vehicle Disk Photo"
+                android:layout_marginTop="10dp"/>
+
+            <!-- Client Residential Address -->
+            <EditText
+                android:id="@+id/client_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Client Residential Address"/>
+
+            <!-- B2B Invoice Number -->
+            <EditText
+                android:id="@+id/invoice_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="B2B Invoice Number"/>
+        </LinearLayout>
+
+        <!-- Vehicle Information -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rounded_white_bg"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trailer Information"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="10dp"/>
+
+            <!-- Vehicle Barcode -->
+            <EditText
+                android:id="@+id/vehicle_barcode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Trailer QR Code"/>
+
+            <!-- Estimated Distance -->
+            <EditText
+                android:id="@+id/estimated_distance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Estimated Distance: This Will be calculated between branch coordinates"/>
+
+            <!-- Current Location -->
+            <EditText
+                android:id="@+id/current_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Current Location: This will be fetched by the current branch that is logged in"/>
+            <!-- One Way Check Box -->
+            <CheckBox
+                android:id="@+id/one_way"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="One Way"/>
+            <!-- Delivery Destination -->
+
+            <TextView
+                android:id="@+id/delivery_tv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Delivery Destination:"/>
+            <Spinner
+                android:id="@+id/delivery_destination"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Trailer Condition:"/>
+            <!-- Trailer Condition and Remarks -->
+            <Spinner
+                android:id="@+id/trailer_condition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <EditText
+                android:id="@+id/trailer_remarks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Trailer Remarks"/>
+        </LinearLayout>
+
+        <!-- Booking & Delivery Date -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rounded_white_bg"
+            android:layout_marginBottom="16dp">
+
+            <!-- Booking Date -->
+            <Button
+                android:id="@+id/booking_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Rental Date and Time"
+                android:backgroundTint="@color/orange"/>
+
+            <!-- Delivery Date -->
+            <Button
+                android:id="@+id/delivery_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Delivery Date and Time"
+                android:backgroundTint="@color/orange"/>
+        </LinearLayout>
+
+        <!-- Signature -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rounded_white_bg"
+            android:layout_marginBottom="16dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Signature"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="10dp"/>
+
+            <com.github.gcacace.signaturepad.views.SignaturePad
+                android:id="@+id/signature_pad"
+                android:layout_width="500dp"
+                android:layout_height="150dp"
+                android:background="#D3D3D3" />
+        </LinearLayout>
+
+
+        <!-- Terms and Condition Checkbox -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rounded_white_bg"
+            android:layout_marginBottom="16dp">
+
+            <CheckBox
+                android:id="@+id/terms_conditions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="I accept Terms and Conditions"/>
+
+            <!-- Terms and Conditions Button -->
+            <Button
+                android:id="@+id/terms_conditions_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Terms and Conditions"
+                android:backgroundTint="@color/orange"/>
+
+            <!-- Book Trailer button -->
+            <Button
+                android:id="@+id/book_trailer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rent Trailer"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/orange"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">EssentialTrailerHire</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="auth_failed">Authentication Failed</string>
+    <string name="minimum_password">Minimum password length is 6 characters</string>
+    <string name="error_invalid_email">Invalid Email</string>
+    <string name="error_user_not_found">User Not Found</string>
+    <string name="register">Register</string>
+    <string name="already_have_account">If you already have an account log in here.</string>
+    <string name="Username">Username</string>
+
+    <string-array name="delivery_destinations">
+        <item>Destination 1</item>
+        <item>Destination 2</item>
+        <item>Destination 3</item>
+        <!-- Add more items as necessary -->
+    </string-array>
+
+    <string-array name="trailer_conditions">
+        <item>Good</item>
+        <item>Average</item>
+        <item>Bad</item>
+        <!-- Add more items as necessary -->
+    </string-array>
+
+</resources>

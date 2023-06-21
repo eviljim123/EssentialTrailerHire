@@ -1,0 +1,68 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:src="@drawable/image2"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"/>
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:rowCount="2"
+            android:alignmentMode="alignBounds"
+            android:padding="10dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/trailer_booking_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Trailer Rental"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/receive_trailer_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Receive Trailer"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/incoming_trailers_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Incoming Trailers"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/booking_reports_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Rental Reports"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</ScrollView>

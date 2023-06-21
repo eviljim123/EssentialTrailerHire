@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MyButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@color/orange</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+</resources>
