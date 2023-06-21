@@ -9,10 +9,22 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.BuildConfig;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,8 +45,6 @@ public class MainActivity extends AppCompatActivity {
         inputEmail = findViewById(R.id.username);
         inputPassword = findViewById(R.id.password);
         Button btnLogin = findViewById(R.id.login);
-
-
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,37 +82,35 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // Authenticate user
-                auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(MainActivity.this, task -> {
-                            if (!task.isSuccessful()) {
-                                // There was an error
-                                try {
-                                    throw task.getException();
-                                }
-                                // if user enters wrong email.
-                                catch (FirebaseAuthInvalidUserException invalidEmail) {
-                                    inputEmail.setError("Invalid Email");
-                                    inputEmail.requestFocus();
-                                }
-                                // if user enters wrong password.
-                                catch (FirebaseAuthInvalidCredentialsException wrongPassword) {
-                                    inputPassword.setError("Incorrect Password");
-                                    inputPassword.requestFocus();
-                                }
-                                catch (Exception e) {
-                                    Toast.makeText(MainActivity.this, "Authentication failed!", Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                FirebaseUser user = auth.getCurrentUser();
-                                // You can perform other operations with the authenticated user here.
-                                Toast.makeText(MainActivity.this, "Authentication successful!", Toast.LENGTH_SHORT).show();
+                auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(MainActivity.this, task -> {
+                    if (!task.isSuccessful()) {
+                        // There was an error
+                        try {
+                            throw task.getException();
+                        }
+                        // if user enters wrong email.
+                        catch (FirebaseAuthInvalidUserException invalidEmail) {
+                            inputEmail.setError("Invalid Email");
+                            inputEmail.requestFocus();
+                        }
+                        // if user enters wrong password.
+                        catch (FirebaseAuthInvalidCredentialsException wrongPassword) {
+                            inputPassword.setError("Incorrect Password");
+                            inputPassword.requestFocus();
+                        } catch (Exception e) {
+                            Toast.makeText(MainActivity.this, "Authentication failed!", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        FirebaseUser user = auth.getCurrentUser();
+                        // You can perform other operations with the authenticated user here.
+                        Toast.makeText(MainActivity.this, "Authentication successful!", Toast.LENGTH_SHORT).show();
 
-                                // Add this line to start MainMenuActivity after a successful login
-                                startActivity(new Intent(MainActivity.this, MainMenu.class));
-                            }
-                        });
-
+                        // Add this line to start MainMenuActivity after a successful login
+                        startActivity(new Intent(MainActivity.this, MainMenu.class));
+                    }
+                });
             }
         });
     }
+
 }
