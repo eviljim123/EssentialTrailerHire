@@ -51,9 +51,11 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         databaseReference = FirebaseDatabase.getInstance().getReference("trailers");
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-        // Get a reference to the 'incomingTrailers' and 'rentals' nodes
+        Log.d("Debugging", "databaseReference: " + databaseReference); // Debugging line
+        // Get a reference to the 'incomingTrailers' node
         incomingTrailersRef = rootRef.child("incomingTrailers");
         rentalsRef = rootRef.child("rentals");
+
 
         etBarcode = findViewById(R.id.et_barcode);
         etRemarks = findViewById(R.id.et_remarks);
@@ -129,7 +131,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 Log.d("Debugging", "databaseReference: " + databaseReference);
                                 // We use the trailer's barcode to find it in the 'trailers' node
-                                databaseReference.child("trailers").orderByChild("barcode").equalTo(barcode)
+                                databaseReference.orderByChild("barcode").equalTo(barcode)
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -167,7 +169,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                                 Toast.makeText(ReceiveTrailerActivity.this, "Failed to fetch data from Firebase", Toast.LENGTH_SHORT).show();
                                             }
                                         });
-
                                 // Delete the entry from 'incomingTrailers' if the barcode matches the 'trailerId'
                                 incomingTrailersRef.orderByChild("trailerId").equalTo(barcode)
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -181,7 +182,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                             @Override
                                             public void onCancelled(@NonNull DatabaseError databaseError) {
                                                 Toast.makeText(ReceiveTrailerActivity.this, "Failed to delete trailer: " + databaseError.getMessage(), Toast.LENGTH_LONG).show();
-
                                             }
                                         });
 
@@ -215,9 +215,8 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                         .setNegativeButton(android.R.string.no, null).show();
             }
         });
-
     }
-        @Override
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -229,4 +228,5 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             }
         }
     }
+
 }
