@@ -1,24 +1,24 @@
 package com.pitechitsolutions.essentialtrailerhire;
 
 public class Customer {
-    public String name;
-    public String surname;
-    public String idNumber;
-    public String contactNumber;
-    public String email;
-    public String driversLicensePhoto;
-    public String vehicleDiskPhoto;
-    public String residentialAddress;
-    public String b2bInvoiceNumber;
-    private String invoiceNumber;
-
-
+    private String name;
+    private String surname;
+    private String idNumber;
+    private String contactNumber;
+    private String email;
+    private String residentialAddress;
 
     public Customer() {
+        // Default constructor required for calls to DataSnapshot.getValue(Customer.class)
     }
 
-    public void setInvoiceNumber(String invoiceNumber) {
-        this.invoiceNumber = invoiceNumber;
+    public Customer(String name, String surname, String idNumber, String contactNumber, String email, String residentialAddress) {
+        this.name = name;
+        this.surname = surname;
+        this.idNumber = idNumber;
+        this.contactNumber = contactNumber;
+        this.email = email;
+        this.residentialAddress = residentialAddress;
     }
 
     public String getName() {
@@ -61,35 +61,11 @@ public class Customer {
         this.email = email;
     }
 
-    public String getDriversLicensePhoto() {
-        return driversLicensePhoto;
-    }
-
-    public void setDriversLicensePhoto(String driversLicensePhoto) {
-        this.driversLicensePhoto = driversLicensePhoto;
-    }
-
-    public String getVehicleDiskPhoto() {
-        return vehicleDiskPhoto;
-    }
-
-    public void setVehicleDiskPhoto(String vehicleDiskPhoto) {
-        this.vehicleDiskPhoto = vehicleDiskPhoto;
-    }
-
     public String getResidentialAddress() {
         return residentialAddress;
     }
 
     public void setResidentialAddress(String residentialAddress) {
         this.residentialAddress = residentialAddress;
-    }
-
-    public String getB2bInvoiceNumber() {
-        return b2bInvoiceNumber;
-    }
-
-    public void setB2bInvoiceNumber(String b2bInvoiceNumber) {
-        this.b2bInvoiceNumber = b2bInvoiceNumber;
     }
 }

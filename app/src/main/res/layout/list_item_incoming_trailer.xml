@@ -23,22 +23,15 @@
                 android:orientation="vertical"
                 android:padding="16dp"
                 android:layout_marginBottom="10dp">
-
                 <TextView
+                    android:id="@+id/incoming_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Trailer Barcode: BC12345"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:text="Incoming Trailer:"
+                    android:textSize="16sp" />
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Return Time: 5:00 PM, 2nd Jan 2023"
-                    android:textSize="14sp"
-                    android:textColor="#808080" />
-
-                <TextView
+                    android:id="@+id/tv_origin_branch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Origin Branch: Branch Name"
@@ -46,10 +39,22 @@
                     android:textColor="#808080" />
 
                 <TextView
-                    android:id="@+id/tv_vin"
+                    android:id="@+id/tv_estimated_arrival"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp" />
+                    android:text="Return Time: 5:00 PM, 2nd Jan 2023"
+                    android:textSize="14sp"
+                    android:textColor="#808080" />
+
+                <TextView
+                    android:id="@+id/tv_trailer_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Trailer Barcode: BC12345"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+
             </LinearLayout>
 
         </LinearLayout>
@@ -57,28 +62,3 @@
     </ScrollView>
 
 </RelativeLayout>
-
-
-
-
-
-    <!--<?xml version="1.0" encoding="utf-8"?>-->
-<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="wrap_content"-->
-<!--    android:orientation="horizontal"-->
-<!--    android:padding="16dp">-->
-
-<!--    <TextView-->
-<!--        android:id="@+id/tv_vin"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_weight="1"-->
-<!--        android:textSize="16sp" />-->
-
-<!--    <TextView-->
-<!--        android:id="@+id/tv_return_time"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:textSize="16sp" />-->
-<!--</LinearLayout>-->

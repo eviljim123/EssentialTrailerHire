@@ -9,11 +9,12 @@ public class Trailer {
     private String status;
     private String remarks;
     private String returnDate;
-
+    private String type;  // <- Add this
     private double estimatedDistance;
     private String currentLocation;
     private boolean oneWayTrip;
     private String deliveryDestination;
+
 
     // Default constructor required for calls to DataSnapshot.getValue(Trailer.class)
     public Trailer() {
@@ -27,6 +28,14 @@ public class Trailer {
         this.returnDate = returnDate;
     }
 
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
     public String getBarcode() {
         return barcode;
     }
@@ -114,4 +123,6 @@ public class Trailer {
     public void setDeliveryDestination(String deliveryDestination) {
         this.deliveryDestination = deliveryDestination;
     }
+
+
 }

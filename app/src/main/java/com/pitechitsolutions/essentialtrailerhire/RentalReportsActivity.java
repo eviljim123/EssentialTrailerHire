@@ -8,35 +8,49 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.LinkedList;
 import java.util.List;
 
 public class RentalReportsActivity extends AppCompatActivity {
-
+    FirebaseUser user;
     private DatabaseReference mDatabase;
-    private String loggedInBranchId = "branchID1"; // TODO: replace this with actual logged-in branch ID.
+    private String loggedInBranchId;
+    private String loggedInBranchName;  // Add this line
     private static final String TAG = "RentalReportsActivity";
     private RentalAdapter mAdapter;
-    private List<Rental> rentals = new LinkedList<>(); // Use LinkedList for efficient add to start of list
+    private List<Rental> rentals = new LinkedList<>();
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rental_reports);
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        // Get the current logged in user
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if(currentUser != null) {
+            loggedInBranchName = currentUser.getEmail().toLowerCase();
+        }
+
 
         RecyclerView recyclerView = findViewById(R.id.rentalReportsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -45,9 +59,8 @@ public class RentalReportsActivity extends AppCompatActivity {
         recyclerView.setAdapter(mAdapter);
 
         // First fetch the logged-in branch ID
-        fetchLoggedInBranchIdFromFirebase();
+        fetchRentalsFromFirebase();
     }
-
 
     private void fetchLoggedInBranchIdFromFirebase() {
         SharedPreferences sharedPref = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -58,92 +71,277 @@ public class RentalReportsActivity extends AppCompatActivity {
             return;
         }
 
+        Log.i(TAG, "Fetched logged-in branch ID: " + loggedInBranchId);
+
         // Now fetch the rentals
-        fetchRentalsFromFirebase();
+
     }
+
 
     private void fetchRentalsFromFirebase() {
-        mDatabase.child("branches").child(loggedInBranchId).child("rentals")
-                .orderByKey().limitToLast(10)
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        rentals.clear();
-                        for (DataSnapshot rentalSnapshot : snapshot.getChildren()) {
-                            try {
-                                Rental rental = rentalSnapshot.getValue(Rental.class);
-                                rentals.add(0, rental);
-                            } catch (DatabaseException e) {
-                                Log.e(TAG, "Failed to convert snapshot to Rental", e);
-                            }
-                        }
-                        mAdapter.notifyDataSetChanged();
-                    }
+        // Log the value of loggedInBranchId
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Log.e(TAG, "Failed to fetch rentals", error.toException());
+
+        Log.i(TAG, "Fetching rentals for branch Name: " + loggedInBranchName);
+
+        Query rentalsQuery = mDatabase.child("rentals").orderByChild("currentLocation").equalTo(loggedInBranchName);
+
+        rentalsQuery.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!snapshot.exists()) {
+                    Log.i(TAG, "No rentals found.");
+                    return;
+                }
+                rentals.clear();
+                int counter = 0; // Counter to manually limit the results
+                for (DataSnapshot rentalSnapshot : snapshot.getChildren()) {
+                    if (counter >= 10) break; // Stop adding after 10 rentals
+                    try {
+                        Rental rental = rentalSnapshot.getValue(Rental.class);
+                        if (rental != null) {
+                            rental.setRentalId(rentalSnapshot.getKey()); // setting the rentalId
+
+                            // Fetch customer details
+                            String customerId = rental.getCustomerId();
+                            DatabaseReference customerRef = mDatabase.child("customers").child(customerId);
+                            customerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot customerSnapshot) {
+                                    if (customerSnapshot.exists()) {
+                                        Customer customer = customerSnapshot.getValue(Customer.class);
+                                        if (customer != null) {
+                                            rental.setCustomerName(customer.getName());
+                                            rental.setCustomerSurname(customer.getSurname());
+                                            rental.setCustomerContactNumber(customer.getContactNumber());
+                                            mAdapter.notifyDataSetChanged();  // Notify the adapter of the data change here
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    Log.e(TAG, "Failed to fetch customer", error.toException());
+                                }
+                            });
+
+                        }
+                        // Log the value of rentalId
+                        Log.i(TAG, "Fetched rental with ID: " + (rental != null ? rental.getRentalId() : "null"));
+                        if (rental != null) {
+                            rentals.add(0, rental);
+                        }
+                        counter++;
+                    } catch (DatabaseException e) {
+                        // Log the DatabaseException
+                        Log.e(TAG, "Failed to convert snapshot to Rental: " + rentalSnapshot, e);
                     }
-                });
+                }
+                mAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
-    class Rental {
-        private String clientName, trailerBarcode, invoiceNumber, bookingTime, returnTime;
+    public static class Rental {
+        private String bookingStatus;
+        private String currentLocation;
+        private String customerId;
+        private String deliveryDestination;
+        private String driverLicenseUrl;
+        private String invoiceNumber;
+        private boolean oneWayTrip;
+        private String rentalDateTime;
+        private String rentalId;
+        private String selectedDeliveryDateTime;
+        private String signatureUrl;
+        private boolean termsAndConditionsAccepted;
+        private String trailerBarcode;
+        private String trailerRemarks;
+        private String vehicleDiskUrl;
 
+        private String customerName;
+        private String customerSurname;
+        private String customerContactNumber;
+
+        // Default constructor required for calls to DataSnapshot.getValue(Rental.class)
         public Rental() {
-            // Default constructor required for calls to DataSnapshot.getValue(Rental.class)
+            // This is needed for Firebase
         }
 
-        public Rental(String clientName, String trailerBarcode, String invoiceNumber, String bookingTime, String returnTime) {
-            this.clientName = clientName;
-            this.trailerBarcode = trailerBarcode;
+        // Constructor with all properties
+        public Rental(String bookingStatus, String currentLocation, String customerId, String deliveryDestination, String driverLicenseUrl, String invoiceNumber, boolean oneWayTrip, String rentalDateTime, String rentalId, String selectedDeliveryDateTime, String signatureUrl, boolean termsAndConditionsAccepted, String trailerBarcode, String trailerRemarks, String vehicleDiskUrl) {
+            this.bookingStatus = bookingStatus;
+            this.currentLocation = currentLocation;
+            this.customerId = customerId;
+            this.deliveryDestination = deliveryDestination;
+            this.driverLicenseUrl = driverLicenseUrl;
             this.invoiceNumber = invoiceNumber;
-            this.bookingTime = bookingTime;
-            this.returnTime = returnTime;
+            this.oneWayTrip = oneWayTrip;
+            this.rentalDateTime = rentalDateTime;
+            this.rentalId = rentalId;
+            this.selectedDeliveryDateTime = selectedDeliveryDateTime;
+            this.signatureUrl = signatureUrl;
+            this.termsAndConditionsAccepted = termsAndConditionsAccepted;
+            this.trailerBarcode = trailerBarcode;
+            this.trailerRemarks = trailerRemarks;
+            this.vehicleDiskUrl = vehicleDiskUrl;
         }
+
+
 
         // Getters and Setters
-        // ... add getters and setters for all fields here ...
+        // Add getters and setters for all the properties
 
-        public String getClientName() {
-            return clientName;
+        public String getCustomerName() {
+            return customerName;
         }
 
-        public void setClientName(String clientName) {
-            this.clientName = clientName;
+        public void setCustomerName(String customerName) {
+            this.customerName = customerName;
         }
 
-        public String getTrailerBarcode() {
-            return trailerBarcode;
+        public String getCustomerSurname() {
+            return customerSurname;
         }
 
-        public void setTrailerBarcode(String trailerBarcode) {
-            this.trailerBarcode = trailerBarcode;
+        public void setCustomerSurname(String customerSurname) {
+            this.customerSurname = customerSurname;
+        }
+
+        public String getCustomerContactNumber() {
+            return customerContactNumber;
+        }
+
+        public void setCustomerContactNumber(String customerContactNumber) {
+            this.customerContactNumber = customerContactNumber;
+        }
+        // Getters
+        public String getBookingStatus() {
+            return bookingStatus;
+        }
+
+        public String getCurrentLocation() {
+            return currentLocation;
+        }
+
+        public String getCustomerId() {
+            return customerId;
+        }
+
+        public String getDeliveryDestination() {
+            return deliveryDestination;
+        }
+
+        public String getDriverLicenseUrl() {
+            return driverLicenseUrl;
         }
 
         public String getInvoiceNumber() {
             return invoiceNumber;
         }
 
+        public boolean isOneWayTrip() {
+            return oneWayTrip;
+        }
+
+        public String getRentalDateTime() {
+            return rentalDateTime;
+        }
+
+        public String getRentalId() {
+            return rentalId;
+        }
+
+        public String getSelectedDeliveryDateTime() {
+            return selectedDeliveryDateTime;
+        }
+
+        public String getSignatureUrl() {
+            return signatureUrl;
+        }
+
+        public boolean isTermsAndConditionsAccepted() {
+            return termsAndConditionsAccepted;
+        }
+
+        public String getTrailerBarcode() {
+            return trailerBarcode;
+        }
+
+        public String getTrailerRemarks() {
+            return trailerRemarks;
+        }
+
+        public String getVehicleDiskUrl() {
+            return vehicleDiskUrl;
+        }
+
+        // Setters
+        public void setBookingStatus(String bookingStatus) {
+            this.bookingStatus = bookingStatus;
+        }
+
+        public void setCurrentLocation(String currentLocation) {
+            this.currentLocation = currentLocation;
+        }
+
+        public void setCustomerId(String customerId) {
+            this.customerId = customerId;
+        }
+
+        public void setDeliveryDestination(String deliveryDestination) {
+            this.deliveryDestination = deliveryDestination;
+        }
+
+        public void setDriverLicenseUrl(String driverLicenseUrl) {
+            this.driverLicenseUrl = driverLicenseUrl;
+        }
+
         public void setInvoiceNumber(String invoiceNumber) {
             this.invoiceNumber = invoiceNumber;
         }
 
-        public String getBookingTime() {
-            return bookingTime;
+        public void setOneWayTrip(boolean oneWayTrip) {
+            this.oneWayTrip = oneWayTrip;
         }
 
-        public void setBookingTime(String bookingTime) {
-            this.bookingTime = bookingTime;
+        public void setRentalDateTime(String rentalDateTime) {
+            this.rentalDateTime = rentalDateTime;
         }
 
-        public String getReturnTime() {
-            return returnTime;
+        public void setRentalId(String rentalId) {
+            this.rentalId = rentalId;
         }
 
-        public void setReturnTime(String returnTime) {
-            this.returnTime = returnTime;
+        public void setSelectedDeliveryDateTime(String selectedDeliveryDateTime) {
+            this.selectedDeliveryDateTime = selectedDeliveryDateTime;
         }
+
+        public void setSignatureUrl(String signatureUrl) {
+            this.signatureUrl = signatureUrl;
+        }
+
+        public void setTermsAndConditionsAccepted(boolean termsAndConditionsAccepted) {
+            this.termsAndConditionsAccepted = termsAndConditionsAccepted;
+        }
+
+        public void setTrailerBarcode(String trailerBarcode) {
+            this.trailerBarcode = trailerBarcode;
+        }
+
+        public void setTrailerRemarks(String trailerRemarks) {
+            this.trailerRemarks = trailerRemarks;
+        }
+
+        public void setVehicleDiskUrl(String vehicleDiskUrl) {
+            this.vehicleDiskUrl = vehicleDiskUrl;
+        }
+
     }
 
     class RentalAdapter extends RecyclerView.Adapter<RentalAdapter.RentalViewHolder> {
@@ -178,12 +376,16 @@ public class RentalReportsActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(RentalViewHolder holder, int position) {
             Rental rental = rentalList.get(position);
-            holder.clientNameView.setText(rental.getClientName());
-            holder.trailerBarcodeView.setText(rental.getTrailerBarcode());
-            holder.invoiceNumberView.setText(rental.getInvoiceNumber());
-            holder.bookingTimeView.setText(rental.getBookingTime());
-            holder.returnTimeView.setText(rental.getReturnTime());
+            if (rental != null) {
+                String customerInfo = "Client Name: " + rental.getCustomerName() + " " + rental.getCustomerSurname() + "\nContact Number: " + rental.getCustomerContactNumber();
+                holder.clientNameView.setText(customerInfo);
+                holder.trailerBarcodeView.setText(rental.getTrailerBarcode() != null ? "Trailer Barcode: " + rental.getTrailerBarcode() : "");
+                holder.invoiceNumberView.setText(rental.getInvoiceNumber() != null ? "Invoice Number: " + rental.getInvoiceNumber() : "");
+                holder.bookingTimeView.setText(rental.getRentalDateTime() != null ? "Booking Time: " + rental.getRentalDateTime() : "");
+                holder.returnTimeView.setText(rental.getSelectedDeliveryDateTime() != null ? "Return Time: " + rental.getSelectedDeliveryDateTime() : "");
+            }
         }
+
 
         @Override
         public int getItemCount() {

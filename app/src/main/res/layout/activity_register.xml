@@ -3,25 +3,67 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/branchEmail"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textEmailAddress"
-        android:hint="Branch Email" />
+        android:orientation="vertical"
+        android:background="@drawable/rounded_white_bg"
+        android:padding="16dp">
 
-    <EditText
-        android:id="@+id/branchPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPassword"
-        android:hint="Branch Password"
-        android:layout_below="@id/branchEmail" />
+        <!-- Heading -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Branch Registration"
+            android:textStyle="bold"
+            android:textSize="24sp"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/btnRegisterBranch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Register Branch"
-        android:layout_below="@id/branchPassword" />
+        <EditText
+            android:id="@+id/branchEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"
+            android:hint="Branch Email" />
+
+        <EditText
+            android:id="@+id/branchPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:hint="Branch Password"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/branchLatitude"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal|numberSigned"
+            android:hint="Branch Latitude"
+            android:layout_marginTop="8dp" />
+
+        <EditText
+            android:id="@+id/branchLongitude"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal|numberSigned"
+            android:hint="Branch Longitude"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btnRegisterBranch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register Branch"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/orange"/>
+        <Button
+            android:id="@+id/btnGetLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get Current Coordinates"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/orange"/>
+    </LinearLayout>
+
 </RelativeLayout>

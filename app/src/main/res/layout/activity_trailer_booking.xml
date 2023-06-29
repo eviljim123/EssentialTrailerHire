@@ -38,6 +38,14 @@
                 android:textSize="18sp"
                 android:layout_marginBottom="10dp"/>
 
+            <AutoCompleteTextView
+                android:id="@+id/search_client"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:dropDownHeight="300dp"
+                android:hint="Search Client"/>
+
+
             <!-- Client Name & Surname -->
             <EditText
                 android:id="@+id/client_name"
@@ -135,12 +143,26 @@
                 android:textSize="18sp"
                 android:layout_marginBottom="10dp"/>
 
-            <!-- Vehicle Barcode -->
-            <EditText
-                android:id="@+id/vehicle_barcode"
+            <!-- Trailer QR Code -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Trailer QR Code"/>
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/vehicle_barcode"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:hint="Trailer QR Code"/>
+
+                <Button
+                    android:id="@+id/scan_qr_code"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scan"
+                    android:backgroundTint="@color/orange"/>
+            </LinearLayout>
 
             <!-- Estimated Distance -->
             <EditText
@@ -173,9 +195,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-
-
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -193,6 +212,70 @@
                 android:hint="Trailer Remarks"/>
         </LinearLayout>
 
+        <!-- ... The XML above this comment stays the same -->
+
+        <!-- Trailer Status, VIN Number, License Plate Number, and Trailer Condition -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rounded_white_bg"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trailer Status"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="10dp"/>
+            <TextView
+                android:id="@+id/trailer_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trailer VIN Number"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginTop="10dp"/>
+            <TextView
+                android:id="@+id/trailer_vin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trailer License Plate Number"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginTop="10dp"/>
+            <TextView
+                android:id="@+id/trailer_license_plate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trailer Condition After Scan"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginTop="10dp"/>
+            <TextView
+                android:id="@+id/trailer_condition_after_scan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </LinearLayout>
+
+        <!-- ... The XML below this comment stays the same -->
+
+
         <!-- Booking & Delivery Date -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -209,6 +292,11 @@
                 android:layout_height="wrap_content"
                 android:text="Select Rental Date and Time"
                 android:backgroundTint="@color/orange"/>
+            <TextView
+                android:id="@+id/tvRentalDateTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""/>
 
             <!-- Delivery Date -->
             <Button
@@ -217,6 +305,12 @@
                 android:layout_height="wrap_content"
                 android:text="Select Delivery Date and Time"
                 android:backgroundTint="@color/orange"/>
+            <TextView
+                android:id="@+id/tvDeliveryDateTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""/>
+
         </LinearLayout>
 
         <!-- Signature -->
