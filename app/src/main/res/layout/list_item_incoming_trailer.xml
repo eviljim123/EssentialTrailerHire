@@ -50,7 +50,7 @@
                     android:id="@+id/tv_trailer_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Trailer Barcode: BC12345"
+                    android:text="Trailer QR Code: BC12345"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 

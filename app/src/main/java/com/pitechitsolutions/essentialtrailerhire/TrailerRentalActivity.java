@@ -1,6 +1,7 @@
 package com.pitechitsolutions.essentialtrailerhire;
 
 import static android.content.ContentValues.TAG;
+import java.util.concurrent.TimeUnit;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -56,7 +57,9 @@ import java.util.List;
 import java.util.Locale;
 
 public class TrailerRentalActivity extends AppCompatActivity {
-
+    private Date startDate;
+    private Date endDate;
+    private Trailer trailer;
     // Declare currentBranchId as a global variable
     private String currentBranchId;
     private StorageReference signatureCaptureRef;
@@ -101,7 +104,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
     private Bitmap vehicleDiskBitmap;
     private Bitmap signatureBitmap;
 
-
+    private Trailer scannedTrailer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -151,6 +154,15 @@ public class TrailerRentalActivity extends AppCompatActivity {
         licenseCaptureRef = storage.getReference().child("Disk Captures");
         vehicleCaptureRef = storage.getReference().child("Licence Captures");
         signatureCaptureRef = storage.getReference().child("Signature Captures");
+        Button btnCalculateFee = findViewById(R.id.btnCalculateFee);
+        TextView tvAmtToPay = findViewById(R.id.tvAmtToPay);
+
+        btnViewTermsConditions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTermsAndConditions();
+            }
+        });
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
@@ -269,6 +281,29 @@ public class TrailerRentalActivity extends AppCompatActivity {
             }
         });
 
+        DatabaseReference trailerRef = database.getReference("trailers"); // This is a path to where your trailer data is stored
+
+        trailerRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+
+                Trailer trailer = dataSnapshot.getValue(Trailer.class);
+                if(trailer != null){
+                    // Use your trailer object here
+                    Log.i("Trailer Data", "Trailer data: " + trailer.getBarcode());
+                } else {
+                    Log.e("Trailer Data", "No trailer data found!");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.e("Trailer Data", "Failed to read trailer data.", error.toException());
+            }
+        });
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("branches");
         databaseReference.addValueEventListener(new ValueEventListener() {
@@ -344,13 +379,93 @@ public class TrailerRentalActivity extends AppCompatActivity {
             public void onClick(View v) {
                 IntentIntegrator integrator = new IntentIntegrator(TrailerRentalActivity.this);
                 integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
-                integrator.setPrompt("Scan a barcode");
+                integrator.setPrompt("Scan a QR Code");
                 integrator.setCameraId(0);  // Use a specific camera of the device
                 integrator.setBeepEnabled(false);
                 integrator.setBarcodeImageEnabled(true);
                 integrator.initiateScan();
             }
         });
+
+        btnCalculateFee.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    // Get rental and delivery date time from TextViews
+                    TextView tvRentalDateTime = findViewById(R.id.tvRentalDateTime);
+                    TextView tvDeliveryDateTime = findViewById(R.id.tvDeliveryDateTime);
+                    String rentalDateTime = tvRentalDateTime.getText().toString();
+                    String deliveryDateTime = tvDeliveryDateTime.getText().toString();
+
+                    // Parse your dates
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    Date rentalDate = format.parse(rentalDateTime);
+
+                    long duration = 0;
+                    if (!oneWayCheckBox.isChecked()) {
+                        Date deliveryDate = format.parse(deliveryDateTime);
+                        duration = (deliveryDate.getTime() - rentalDate.getTime()) / (1000 * 60 * 60 * 24);
+                        if (duration < 1) {
+                            duration = 1;
+                        }
+                    }
+
+                    // Check if scannedTrailer is null
+                    if (scannedTrailer == null) {
+                        return;
+                    }
+
+                    // Get the trailer size
+                    String trailerSize = scannedTrailer.getType();
+
+                    // Set the trailer price based on size
+                    int price;
+                    switch (trailerSize) {
+                        case "2.5m":
+                            price = 300;
+                            break;
+                        case "3m":
+                            price = 350;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unexpected trailer size: " + trailerSize);
+                    }
+
+                    // Calculate final fee
+                    int fee;
+                    if (oneWayCheckBox.isChecked()) {
+                        // Get distance from EditText
+                        EditText estimatedDistanceEditText = findViewById(R.id.estimated_distance);
+                        double estimatedDistance = Double.parseDouble(estimatedDistanceEditText.getText().toString());
+
+                        // For one-way rentals, fee is based on the distance
+                        double pricePerKilometer = 1.9;
+                        if (estimatedDistance <= 400) {
+                            // If the distance is less than or equal to 400 km, charge a full day's price and for the distance
+                            fee = price + (int) Math.round(pricePerKilometer * estimatedDistance);
+                        } else {
+                            // If the distance is more than 400 km, charge based on the distance only
+                            fee = (int) Math.round(pricePerKilometer * estimatedDistance);
+                        }
+                    } else {
+                        // For non one-way rentals, fee is based on duration and trailer type
+                        fee = (int)duration * price;
+                    }
+
+                    tvAmtToPay.setText("Amount To Pay: " + fee);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    Log.e("TrailerRentalActivity", "Error parsing date: " + e.getMessage());
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    Log.e("TrailerRentalActivity", "Error parsing estimated distance: " + e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                    Log.e("TrailerRentalActivity", "Error with trailer size: " + e.getMessage());
+                }
+            }
+        });
+
 
         btnCaptureDriversLicensePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -485,6 +600,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             // dataSnapshot is the "snapshot" of all trailers with the matching barcode
+
                             for (DataSnapshot trailer : dataSnapshot.getChildren()) {
                                 Trailer trailerInfo = trailer.getValue(Trailer.class);
                                 if (trailerInfo != null) {
@@ -625,8 +741,8 @@ public class TrailerRentalActivity extends AppCompatActivity {
             } else {
                 Log.e("Scan", "Scanned");
                 String scannedBarcode = result.getContents();
-                Log.e("Scan", "Scanned Barcode: " + scannedBarcode);
-                Log.d("Barcode", "Scanned barcode: " + scannedBarcode);
+                Log.e("Scan", "Scanned QR Code: " + scannedBarcode);
+                Log.d("Barcode", "Scanned QR Code: " + scannedBarcode);
 
                 inputTrailerBarcode.setText(scannedBarcode);
                 DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -634,7 +750,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         Log.d("Firebase", "Data: " + dataSnapshot.toString());
-                        Trailer scannedTrailer = null;
+                        scannedTrailer = null;
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             Trailer trailer = snapshot.getValue(Trailer.class);
                             if (trailer != null) {
@@ -715,7 +831,129 @@ public class TrailerRentalActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setTitle("Terms and Conditions");
-        builder.setMessage("1)\tRIGHT OF ADMISSION RESERVED\n" + "2)\tA deposit as stated in the application for trailer rental is payable on the day of collection [A full refund will be paid, if the trailer is returned undamaged]\n" + "3)\tSTRICTLY NO REFUNDS ON BOOKINGS OR PAYMENTS MADE\n" + "4)\tFull amount due to be paid on or before the day of rental [REGRET! NO CHEQUES].\n" + "5)\tIf vehicle is returned later than the agreed upon date and time, the client could be held liable for extra days rent. Is subject to the discretion of the owners of ESSENTIAL TRAILER HIRE].\n" + "6)\tAll vehicles will be inspected with the client BEFORE rental and AFTER return.\n" + "7)\tClient will be responsible for all damages to trailer whilst in his/her possession, including\n" + "tyre damage and burst tyres.\n" + "8)\tIf spare wheel is taken, client will be held responsible for damages or loss (1500 OR replace rim and tyre)\n" + "9)\tESSENTIAL TRAILER HIRE will not be held responsible for any injuries sustained during the use of the vehicle. 0] Tyre pressures to be checked by client.\n" + "10)\tTrailers not to be sublet by client under any circumstances.\n" + "11)\tAfter hours call out fee of R200.00 applies.\n" + "12)\tEssential Trailer Hire, the owners, the employees and affiliates do not accept any responsibility for any damage caused to any person or institution arising from this trailer rental.\n" + "13)\tESSENTIAL TRAILER HIRE are hereby exempt and indemnified from any possible actions taken against them.\n" + "14)\tNO INSURANCE ON TRAILERS OR CONTENTS OR THIRD PARTY INSURANCE.\n" + "15)\tBOOKINGS PAYABLE STRICTLY IN ADVANCE.\n" + "16)\tLivestock trailers to be cleaned before returning (to be returned in the same condition as it was taken), otherwise R100.00 cleaning fee applies.\n" + "17)\tWheel spanners, ropes and canvas covers - not included in hire agreement.\n" + "18)\tCustomer to ensure trailer handbrake in off position before traveling.\n" + "19)\tNo VAT applicable.\n" + "20)\tAny traffic transgression, during the hire period will not be for ESSENTIAL TRAILER HIRE\n");
+        builder.setMessage("The LESSOR AND LESSEE/FRANCHISEE HEREBY AGREE AS FOLLOWS:\n" +
+                "1. DEFINITIONS\n" +
+                "1.1 LESSOR – means registered owner of the trailer hire depot known as ESSENTIAL TRAILER HIRE\n" +
+                "1.2 LESSEE/FRANCHISEE – means the party who hires the trailers from the LESSOR;\n" +
+                "1.3 TRAILER – refers to the vehicle rented by the LESSOR and all equipment and accessories attached there to.\n" +
+                "1.4 CUSTOMER – is the party contracting with the LESSEE/FRANCHISEE to rent a Trailer identified in the Rental Agreement.\n" +
+                "1.5 AUTHORISED DRIVER – is a driver authorised to drive a vehicle towing the Trailer, this includes the customer as well as any other driver whose name and driving license number are listed in the Rental Agreement.\n" +
+                "1.6 HIRE PERIOD – is the period from the date on which the Trailer is collected from the LESSEE/FRANCHISEE by the customer or any authorised driver up until the Trailer is returned to the LESSEE/FRANCHISEE.\n" +
+                "2. TERMS AND CONDITIONS\n" +
+                "2.1 The LESSOR will deliver TWO (2) trailers to each LESSOR/FRANCHISEE’s business premises \n" +
+                        "at the address indicated in “Annexure A”. \n" +
+                        "2.2 The LESSOR/FRANCHISEE may apply for an increased amount of trailers for their business \n" +
+                        "premises depending on the rental volume. \n" +
+                        "2.3 The LESSEE/FRANCHISEE hereby agree that if the monthly minimum trailer target hire are \n" +
+                        "not met, the LESSOR will have the right to relocate the trailers without written notice to the \n" +
+                        "LESSEE/FRANCHISEE. \n" +
+                        "2.4 All rentals are limited to within the borders of the republic of South Africa, unless written consent \n" +
+                        "has been given by the LESSOR. Failure to adhere to the above mentioned will resort in the \n" +
+                        "LESSOR/FRANCHISEE being charged with a criminal offence should the description of the \n" +
+                        "load and or the destination to which the Trailer prove to be incorrect, the deposit will be forfeited. \n" +
+                        "2.5 The LESSEE/FRANCHISEE acknowledges that they have received the Trailers in good \n" +
+                        "roadworthy condition and undertakes to return it in the same condition to the LESSOR when this \n" +
+                        "agreement is terminated. \n" +
+                        "2.6 Subject to the condition of section 151 of the Road Traffic Act, the GVM of the Trailers as \n" +
+                        "indicated is 750 kgs. \n" +
+                        "3. RESPONSIBILITIES OF THE LESSOR \n" +
+                        "3.1 A “Point of Sale” Device will be provided by the LESSOR at their expense to every Trailer Depo \n" +
+                        "of the LESSEE/FRANCHISEE; \n" +
+                        "3.2 The LESSOR will train the appointed staff for each Trailer Depo at their expense; \n" +
+                        "3.3 The LESSOR acknowledges that at the time of delivering of the trailers, the trailers as a whole \n" +
+                        "is in a good working and roadworthy condition and the LESEE/FRANCHISEE undertakes to \n" +
+                        "return it in the same condition, fair wear and tear excluded. \n" +
+                        "3.4 The LESSOR undertakes to maintain and keep the Trailers in a roadworthy state and supply all \n" +
+                        "Roadworthy certificates to the LESSEE/FRANCHISEE. \n" +
+                        "3.5 The LESSOR undertakes to attend to transfer of Sales on monthly payments; \n" +
+                        "3.6 The LESSOR shall not be held liable for: loss, theft or damage to the trailer whatsoever; or loss \n" +
+                        "or damage to the towing vehicle of any nature whatsoever; or any injury or death of whatsoever \n" +
+                        "nature caused to the LESSEE/FRANCHISEE or CUSTOMER or third party by the rental trailer; \n" +
+                        "or loss or damage of the cargo stored on the rental trailer or any third party belongings. This \n" +
+                        "statement is true for occurrences both in and outside the borders of South Africa \n" +
+                        "4. RESPONSIBILITIES OF THE LESSEE/FRANCHISEE \n" +
+                        "4.1 The LESSEE/FRANCHISEE will acknowledge receipt of the trailers in the writing upon delivery \n" +
+                        "thereof by the LESSOR to the LESSEE/FRANCHISEE’s business premises; \n" +
+                        "4.2 The LESSEE/FRANCHISEE undertakes to employ a minimum of TWO (2) staff members to \n" +
+                        "attend to the Trailer Depo; \n" +
+                        "4.3 The LESSEE/FRANCHISEE undertakes to attend to the correct capturing of the “Rental \n" +
+                        "Agreement” which include but is not limited to the Customer’s personal information, Trailer \n" +
+                        "Identification and Information, Customer’s Vehicle Information and purpose of the “Rental \n" +
+                        "Agreement”; \n" +
+                        "4.4 The LESSEE/FRANCHISEE undertakes to complete a “Checklist / Inspection:” for every trailer \n" +
+                        "hire transaction upon collection and return of the trailers and such checklists / Inspection Lists \n" +
+                        "will be available for inspection by the LESSOR at the LESSOR’s demand; \n" +
+                        "4.5 It is the responsibility of the LESSEE/FRANCHISEE to endure that the tyre pressures are correct \n" +
+                        "according to the load being carried and the LESSEE/FRANCHISEE acknowledges that they will \n" +
+                        "be responsible for all damages incurred if par 4.5 are not adhered to, including but not limited to \n" +
+                        "any cuts and damage to the tyres as well as the rims of the trailers; \n" +
+                        "4.6 If upon return of the trailer to the LESSOR there are any damage to the wiring or plug of the \n" +
+                        "trailer, the LESSEE/FRANCHISEE will incur a fee of R100 per damaged trailer \n" +
+                        "and the fee will be charged to the LESSEE/FRANCHISEE’s account; \n" +
+                        "4.7 It is the responsibility of the LESSEE/FRANCHISEE to assure the correctness of the Customer’s \n" +
+                        "information. The vehicle to which the trailer shall be attached shall not be used : \n" +
+                        "4.7.1 In contrary to any Road Traffic Act; \n" +
+                        "4.7.2 By any person who provides mistaken, false or fraudulent information to the \n" +
+                        "LESSEE/FRANCHISEE; \n" +
+                        "4.7.3 By anyone other than the properly licensed driver; \n" +
+                        "4.7.4 By anyone other than the properly licensed driver with the consent of the \n" +
+                        "LESSEE/FRANCHISEE. \n" +
+                        "4.8 The LESSEE/FRANCHISEE shall not incur any expenses, nor have the trailer repaired on behalf \n" +
+                        "of the LESSOR without the express written authorization of the LESSOR. This includes, but is \n" +
+                        "not limited to the removal, tow away, transport or storage of the trailer. Authorized expenditure \n" +
+                        "shall be paid by the LESSOR to the LESSEE/FRANCHISEE on demand. \n" +
+                        "4.9 Should the trailer be involved in an accident or be stolen while in the possession of the \n" +
+                        "LESSEE/FRANCHISEE, it is the responsibility of the LESSEE/FRANCHISEE to: \n" +
+                        "4.9.1 report it to the nearest Police station and the LESSOR within 24 hours; \n" +
+                        "4.9.2 supply the LESSOR with an enlarged copy of the Customer’s driver license; \n" +
+                        "4.9.3 complete the insurance claim form; \n" +
+                        "4.9.4 and pay the required insurance excess of the vehicle. \n" +
+                        "4.10 The LESSEE/FRANCHISEE shall be liable for all fines, penalties and the like, including all \n" +
+                        "legal costs incurred by the LESSOR or to its attorneys in accordance with the usual charges at \n" +
+                        "the time for parking, traffic and other criminal offences arising out of or concerning the use of \n" +
+                        "the trailer during the rental period and the LESSEE/FRANCHISEE accordingly indemnifies \n" +
+                        "the LESSOR against all liability. All charges payable by the LESSEE/FRANCHISEE shall be \n" +
+                        "payable on the termination of the rental period unless the LESSOR requires all or any charges \n" +
+                        "to be prepaid in advance \n" +
+                        "4.11 The trailer may not be used to transport goods in violation of any customs laws or any other \n" +
+                        "illegal manner or beyond the borders of the territory or in any area in the territory where there \n" +
+                        "is or may be a risk of incidence of civil unrest, political disturbance or riot or any activity \n" +
+                        "associated with any of the aforegoing. The LESSEE/FRANCHISEE shall make adequate \n" +
+                        "provision for the safety and security of the trailer and in particular without limiting the \n" +
+                        "generality of the aforegoing he shall keep the trailers properly secured and locked when not in \n" +
+                        "use. \n" +
+                        "5. DEFAULT, LIABILITY, INDEMNITIES AND WARRANTIES \n" +
+                        "5.1 A certificate under the hand of any manager or member of the LESSOR, in respect of any amount \n" +
+                        "owing to the LESSOR under and in terms of this contract, the fact that such amount is due and \n" +
+                        "payable thereon and the date from which such interest is reckoned shall constitute Prima Facie \n" +
+                        "evidence of the LESSEE/FRANCHISEE’s indebtedness to the LESSOR and shall be sufficient \n" +
+                        "to enable the Lessor to obtain judgement in any court having jurisdiction in terms hereof. \n" +
+                        "Notwithstanding the amount involved, any legal action resulting from or in connection with this \n" +
+                        "contract may be instituted in the Magistrates Court, or be referred for arbitration in the sole \n" +
+                        "discretion of the lessor to The Arbitration Foundation of South Africa and for the purpose of such \n" +
+                        "legal action, the LESSEE/FRANCHISEE chooses domicillium citandi et executandi as the \n" +
+                        "address indicated below. \n" +
+                        "5.2 The LESSEE/FRANCHISEE hereby indemnifies the LESSOR in respect of all claims by any \n" +
+                        "person whatsoever in respect of any injury to persons, and or damage or loss to property caused \n" +
+                        "by, or in connection with or arising out of renting the trailer. \n" +
+                        "5.3 Further the LESSEE/FRANCHISEE hereby indemnifies the LESSOR in respect of any costs and \n" +
+                        "charges connected with the claims of whatsoever nature arising out of the renting of the trailers. \n" +
+                        "5.4 The LESSEE/FRANCHISEE consents in terms of Section 45 of Act 32 of 1944, to the LESSOR \n" +
+                        "instituting any action or proceeding or enforcing any of the rights under this agreement in the \n" +
+                        "Magistrate’s Court or any district having jurisdiction by virtue of section 28 or the said act. The \n" +
+                        "LESSEE/FRANCHISEE agrees however, that the LESSOR in its sole and absolute discretion \n" +
+                        "may institute any such action or proceedings in any division of the High Court which may have \n" +
+                        "jurisdiction. \n" +
+                        "5.5 The LESSEE/FRANCHISEE shall not be entitled to cede any of his rights under this agreement \n" +
+                        "or to sub-rent or part with possession of the trailer. \n" +
+                        "5.6 If the LESSOR institutes any legal proceedings against the LESSEE/FRANCHISEE to enforce \n" +
+                        "any of its rights under this agreement it shall be entitled to recover from the Hirer all debt \n" +
+                        "collection or legal cost it incurs to its own debt collectors or attorneys in accordance with their \n" +
+                        "usual charges and assessed as between attorney/debt collector and own client. \n" +
+                        "5.7 The LESSEE/FRANCHISEE chooses the address specified below as his domicilium citandi et \n" +
+                        "executandi (i.e. address for service of all legal process) and any notice posted to him there shall \n" +
+                        "be deemed to have been received 3 days after it is posted unless he proves the contrary.\n" +
+                "5.8 LESSOR domicilium citandi et executandi");
         builder.setPositiveButton("Close", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {

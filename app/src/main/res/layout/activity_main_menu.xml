@@ -38,7 +38,7 @@
                 android:id="@+id/receive_trailer_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Receive Trailer"
+                android:text="Check-in Trailer"
                 android:layout_columnWeight="1"
                 app:backgroundTint="@color/orange"
                 android:textColor="@android:color/white"/>
@@ -47,7 +47,7 @@
                 android:id="@+id/incoming_trailers_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Incoming Trailers"
+                android:text="Inbound Trailers"
                 android:layout_columnWeight="1"
                 app:backgroundTint="@color/orange"
                 android:textColor="@android:color/white"/>
@@ -61,7 +61,32 @@
                 app:backgroundTint="@color/orange"
                 android:textColor="@android:color/white"/>
 
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chat_support_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Chat Support"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/logout_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Logout"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+
         </GridLayout>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"/>
 
     </LinearLayout>
 

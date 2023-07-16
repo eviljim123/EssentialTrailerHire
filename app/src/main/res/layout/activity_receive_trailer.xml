@@ -18,19 +18,14 @@
             android:layout_marginBottom="10dp"
             android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Scan Trailer Barcode:"
-                android:textSize="16sp" />
+
 
             <EditText
                 android:id="@+id/et_barcode"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:hint="Scanned barcode will appear here"
+                android:hint="Scanned QR Code will appear here"
                 android:editable="false"
                 android:focusable="false" />
 
@@ -38,7 +33,7 @@
                 android:id="@+id/btnScanBarcode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Scan Barcode"
+                android:text="Scan QR Code"
                 android:backgroundTint="@color/orange"/>
         </LinearLayout>
 

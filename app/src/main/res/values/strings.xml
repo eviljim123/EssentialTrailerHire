@@ -21,10 +21,11 @@
     <string-array name="trailer_conditions">
         <item>Select condition</item>
         <item>Great</item>
-        <item>Good</item>
         <item>Average</item>
         <item>Bad</item>
-        <item>Inoperable</item>
     </string-array>
+
+
+
 
 </resources>

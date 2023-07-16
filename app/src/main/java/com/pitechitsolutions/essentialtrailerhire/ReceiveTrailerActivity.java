@@ -31,7 +31,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class ReceiveTrailerActivity extends AppCompatActivity {
     private EditText etBarcode;
@@ -42,6 +46,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
     private DatabaseReference incomingTrailersRef;
     private DatabaseReference rentalsRef;
     private final int BARCODE_READER_REQUEST_CODE = 1;
+    DatabaseReference outstandingRentalsRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +60,8 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
         // Get a reference to the 'incomingTrailers' node
         incomingTrailersRef = rootRef.child("incomingTrailers");
         rentalsRef = rootRef.child("rentals");
-
+        // initialize outstandingRentalsRef
+        outstandingRentalsRef = rootRef.child("outstandingRentals");
 
         etBarcode = findViewById(R.id.et_barcode);
         etRemarks = findViewById(R.id.et_remarks);
@@ -104,7 +110,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                 Log.d("Debugging", "barcode: " + barcode + ", remarks: " + remarks + ", returnDate: " + returnDate + ", condition: " + condition); // Debugging line
 
                 if (TextUtils.isEmpty(barcode)) {
-                    etBarcode.setError("Barcode is required");
+                    etBarcode.setError("QR Code is required");
                     return;
                 }
 
@@ -137,7 +143,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                             public void onDataChange(DataSnapshot dataSnapshot) {
                                                 Log.d("FirebaseOperation", "onDataChange triggered, dataSnapshot: " + dataSnapshot.toString());
                                                 Log.d("Debugging", "DataSnapshot dataSnapshot: " + dataSnapshot); // Debugging line
-                                                for (DataSnapshot trailerSnapshot: dataSnapshot.getChildren()) {
+                                                for (DataSnapshot trailerSnapshot : dataSnapshot.getChildren()) {
                                                     Trailer trailer = trailerSnapshot.getValue(Trailer.class);
                                                     if (trailer != null) {
                                                         trailer.setCondition(condition);
@@ -159,7 +165,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                                                     }
                                                                 });
                                                     } else {
-                                                        Toast.makeText(ReceiveTrailerActivity.this, "No trailer found with the given barcode", Toast.LENGTH_SHORT).show();
+                                                        Toast.makeText(ReceiveTrailerActivity.this, "No trailer found with the given QR Code", Toast.LENGTH_SHORT).show();
                                                     }
                                                 }
                                             }
@@ -174,7 +180,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                                                     snapshot.getRef().removeValue();
                                                 }
                                             }
@@ -193,14 +199,47 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                                                     // Get the 'deliveryDestination' from the snapshot
                                                     String deliveryDestination = snapshot.child("deliveryDestination").getValue(String.class);
-
+                                                    Trailer trailer = snapshot.getValue(Trailer.class);  // Initialize trailer object
                                                     // Check if the 'deliveryDestination' matches the currently logged-in branch
                                                     if (currentUserEmail.equals(deliveryDestination)) {
                                                         // If they match, update the 'bookingStatus' to "Complete"
                                                         snapshot.getRef().child("bookingStatus").setValue("Complete");
+
+                                                        // Calculate penalty here.
+                                                        String selectedDeliveryDateTime = snapshot.child("selectedDeliveryDateTime").getValue(String.class);
+                                                        String rentalDateTime = snapshot.child("rentalDateTime").getValue(String.class);
+                                                        String returnDateStr = tvReturnDate.getText().toString();
+                                                        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
+                                                        try {
+                                                            Date returnDate = format.parse(returnDateStr);
+                                                            long diffInMs = returnDate.getTime() - returnDate.getTime();
+                                                            long diffInHours = TimeUnit.MILLISECONDS.toHours(diffInMs);
+
+                                                            double penaltyFee = 0;
+                                                            if (diffInHours > 2 && diffInHours <= 6) {
+                                                                penaltyFee = trailer.getType().equals("2.5m") ? 150 : 175;  // half day penalty
+                                                            } else if (diffInHours > 6) {
+                                                                penaltyFee = trailer.getType().equals("2.5m") ? 300 : 350;  // full day penalty
+                                                            }
+
+                                                            // Update the outstanding rentals node.
+                                                            DatabaseReference outstandingRentalRef = outstandingRentalsRef.child(trailer.getBarcode());
+                                                            outstandingRentalRef.child("penaltyFee").setValue(penaltyFee);
+
+                                                            // Show dialog box here.
+                                                            AlertDialog.Builder builder = new AlertDialog.Builder(ReceiveTrailerActivity.this);
+                                                            builder.setTitle("Outstanding Payment")
+                                                                    .setMessage("The customer owes R" + penaltyFee)
+                                                                    .setPositiveButton("Outstanding Payment Received", null)
+                                                                    .show();
+
+                                                        } catch (ParseException e) {
+                                                            e.printStackTrace();
+                                                        }
                                                     }
                                                 }
                                             }
@@ -216,7 +255,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             }
         });
     }
-    @Override
+        @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 

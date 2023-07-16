@@ -83,7 +83,7 @@ public class BarcodeReaderActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                Toast.makeText(this, "Camera permission is required to read barcodes", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Camera permission is required to read QR Codes", Toast.LENGTH_SHORT).show();
                 // Re-request the missing permissions
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST);
             }

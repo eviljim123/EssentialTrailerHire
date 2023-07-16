@@ -7,6 +7,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +28,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,9 +44,15 @@ public class RentalReportsActivity extends AppCompatActivity {
     private RentalAdapter mAdapter;
     private List<Rental> rentals = new LinkedList<>();
 
+    private TextView rentalCountTextView;
 
 
+    private Spinner spinnerMonth;
+    private Spinner spinnerYear;
 
+    // The selected filter values
+    private int selectedMonth = -1;
+    private int selectedYear = -1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +64,28 @@ public class RentalReportsActivity extends AppCompatActivity {
             loggedInBranchName = currentUser.getEmail().toLowerCase();
         }
 
+        rentalCountTextView = findViewById(R.id.rentalCountTextView);
+        // Initialize and populate the month and year dropdowns
+        spinnerMonth = findViewById(R.id.monthSpinner);
+        spinnerYear = findViewById(R.id.yearSpinner);
+
+
+        ArrayAdapter<CharSequence> monthAdapter = ArrayAdapter.createFromResource(this,
+                R.array.months_array, android.R.layout.simple_spinner_item);
+        monthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerMonth.setAdapter(monthAdapter);
+
+        ArrayAdapter<CharSequence> yearAdapter = ArrayAdapter.createFromResource(this,
+                R.array.years_array, android.R.layout.simple_spinner_item);
+        yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerYear.setAdapter(yearAdapter);
+
+        // Set the selected month and year to the current month and year
+        Calendar currentCalendar = Calendar.getInstance(); // Get the current date
+        selectedMonth = currentCalendar.get(Calendar.MONTH); // Get the current month
+        selectedYear = currentCalendar.get(Calendar.YEAR); // Get the current year
+        spinnerMonth.setSelection(selectedMonth);
+        spinnerYear.setSelection(selectedYear - 2023); // Subtract the starting year (2023 in this case)
 
         RecyclerView recyclerView = findViewById(R.id.rentalReportsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -58,9 +93,36 @@ public class RentalReportsActivity extends AppCompatActivity {
         mAdapter = new RentalAdapter(rentals);
         recyclerView.setAdapter(mAdapter);
 
-        // First fetch the logged-in branch ID
+        // Add listeners for when the selected month or year changes
+        spinnerMonth.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedMonth = position;
+                fetchRentalsFromFirebase();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
+        spinnerYear.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedYear = 2023 + position; // Add the starting year (2023 in this case)
+                fetchRentalsFromFirebase();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
+
+        // Fetch the rentals
         fetchRentalsFromFirebase();
     }
+
 
     private void fetchLoggedInBranchIdFromFirebase() {
         SharedPreferences sharedPref = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -77,11 +139,7 @@ public class RentalReportsActivity extends AppCompatActivity {
 
     }
 
-
     private void fetchRentalsFromFirebase() {
-        // Log the value of loggedInBranchId
-
-
         Log.i(TAG, "Fetching rentals for branch Name: " + loggedInBranchName);
 
         Query rentalsQuery = mDatabase.child("rentals").orderByChild("currentLocation").equalTo(loggedInBranchName);
@@ -94,27 +152,29 @@ public class RentalReportsActivity extends AppCompatActivity {
                     return;
                 }
                 rentals.clear();
-                int counter = 0; // Counter to manually limit the results
+                int selectedMonthRentals = 0; // Counter for selected month rentals
+
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"); // Modify this according to your date format
+
                 for (DataSnapshot rentalSnapshot : snapshot.getChildren()) {
-                    if (counter >= 10) break; // Stop adding after 10 rentals
+                    Rental rental = null;
                     try {
-                        Rental rental = rentalSnapshot.getValue(Rental.class);
+                        rental = rentalSnapshot.getValue(Rental.class);
                         if (rental != null) {
                             rental.setRentalId(rentalSnapshot.getKey()); // setting the rentalId
-
-                            // Fetch customer details
                             String customerId = rental.getCustomerId();
                             DatabaseReference customerRef = mDatabase.child("customers").child(customerId);
+                            Rental finalRental = rental;
                             customerRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot customerSnapshot) {
                                     if (customerSnapshot.exists()) {
                                         Customer customer = customerSnapshot.getValue(Customer.class);
                                         if (customer != null) {
-                                            rental.setCustomerName(customer.getName());
-                                            rental.setCustomerSurname(customer.getSurname());
-                                            rental.setCustomerContactNumber(customer.getContactNumber());
-                                            mAdapter.notifyDataSetChanged();  // Notify the adapter of the data change here
+                                            finalRental.setCustomerName(customer.getName());
+                                            finalRental.setCustomerSurname(customer.getSurname());
+                                            finalRental.setCustomerContactNumber(customer.getContactNumber());
+                                            mAdapter.notifyDataSetChanged();
                                         }
                                     }
                                 }
@@ -125,27 +185,42 @@ public class RentalReportsActivity extends AppCompatActivity {
                                 }
                             });
 
+                            try {
+                                Date rentalDate = format.parse(rental.getRentalDateTime());
+                                Calendar rentalCalendar = Calendar.getInstance();
+                                rentalCalendar.setTime(rentalDate);
+
+                                // Check if the rental belongs to the selected month and year
+                                if (rentalCalendar.get(Calendar.MONTH) == selectedMonth && rentalCalendar.get(Calendar.YEAR) == selectedYear) {
+                                    selectedMonthRentals++;
+                                    rentals.add(0, rental);  // Add the rental to the list only if it matches the selected month and year
+                                }
+                            } catch (ParseException e) {
+                                Log.e(TAG, "Failed to parse date: " + rental.getRentalDateTime(), e);
+                            }
                         }
-                        // Log the value of rentalId
                         Log.i(TAG, "Fetched rental with ID: " + (rental != null ? rental.getRentalId() : "null"));
-                        if (rental != null) {
-                            rentals.add(0, rental);
-                        }
-                        counter++;
                     } catch (DatabaseException e) {
                         // Log the DatabaseException
                         Log.e(TAG, "Failed to convert snapshot to Rental: " + rentalSnapshot, e);
                     }
                 }
+
+                rentalCountTextView.setText("Rental Count for the selected month: " + selectedMonthRentals); // Set the count to the TextView
                 mAdapter.notifyDataSetChanged();
             }
 
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                // Handle onCancelled
+                Log.e(TAG, "Fetching rentals cancelled: ", error.toException());
             }
         });
     }
+
+
+
 
     public static class Rental {
         private String bookingStatus;
@@ -379,7 +454,7 @@ public class RentalReportsActivity extends AppCompatActivity {
             if (rental != null) {
                 String customerInfo = "Client Name: " + rental.getCustomerName() + " " + rental.getCustomerSurname() + "\nContact Number: " + rental.getCustomerContactNumber();
                 holder.clientNameView.setText(customerInfo);
-                holder.trailerBarcodeView.setText(rental.getTrailerBarcode() != null ? "Trailer Barcode: " + rental.getTrailerBarcode() : "");
+                holder.trailerBarcodeView.setText(rental.getTrailerBarcode() != null ? "Trailer QR Code: " + rental.getTrailerBarcode() : "");
                 holder.invoiceNumberView.setText(rental.getInvoiceNumber() != null ? "Invoice Number: " + rental.getInvoiceNumber() : "");
                 holder.bookingTimeView.setText(rental.getRentalDateTime() != null ? "Booking Time: " + rental.getRentalDateTime() : "");
                 holder.returnTimeView.setText(rental.getSelectedDeliveryDateTime() != null ? "Return Time: " + rental.getSelectedDeliveryDateTime() : "");

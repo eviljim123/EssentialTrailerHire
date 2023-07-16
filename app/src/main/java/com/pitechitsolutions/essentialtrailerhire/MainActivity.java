@@ -41,7 +41,8 @@ public class MainActivity extends AppCompatActivity {
         btnRegister = findViewById(R.id.register);
 
         auth = FirebaseAuth.getInstance();
-
+        // Check if user is already logged in
+        checkUser();
         inputEmail = findViewById(R.id.username);
         inputPassword = findViewById(R.id.password);
         Button btnLogin = findViewById(R.id.login);
@@ -112,5 +113,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
+    private void checkUser() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            // User is signed in, navigate to MainMenu
+            startActivity(new Intent(MainActivity.this, MainMenu.class));
+            finish();
+        }
+        // If user isn't signed in, stay on MainActivity
+    }
 }
+

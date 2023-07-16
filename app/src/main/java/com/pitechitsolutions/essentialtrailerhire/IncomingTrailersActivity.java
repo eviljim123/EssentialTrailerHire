@@ -1,6 +1,7 @@
 package com.pitechitsolutions.essentialtrailerhire;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ListView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,9 +45,13 @@ public class IncomingTrailersActivity extends AppCompatActivity {
                 trailers.clear();
                 for (DataSnapshot trailerSnapshot : dataSnapshot.getChildren()) {
                     IncomingTrailer trailer = trailerSnapshot.getValue(IncomingTrailer.class);
-
+                    Log.d("IncomingTrailers", "Current branchId: " + branchId);
+                    Log.d("IncomingTrailers", "Trailer ID: " + trailer.getTrailerId() + ", Delivery Branch: " + trailer.getDeliveryBranch() + ", Status: " + trailer.getStatus());
                     if (trailer != null && "In Transit".equals(trailer.getStatus()) && branchId.equals(trailer.getDeliveryBranch())) {
+                        Log.d("IncomingTrailers", "Matching Trailer Found: " + trailer.getTrailerId());
                         trailers.add(trailer);
+                    } else {
+                        Log.d("IncomingTrailers", "No Matching Trailer Found or Trailer Not In Transit");
                     }
                 }
 
@@ -56,6 +61,7 @@ public class IncomingTrailersActivity extends AppCompatActivity {
                     Toast.makeText(IncomingTrailersActivity.this, "No Incoming Trailers", Toast.LENGTH_LONG).show();
                 }
             }
+
 
             @Override
             public void onCancelled(DatabaseError databaseError) {

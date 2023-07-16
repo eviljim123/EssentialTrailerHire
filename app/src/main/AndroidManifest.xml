@@ -7,12 +7,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
-
 
     <application
         android:allowBackup="true"
@@ -25,6 +25,9 @@
         android:theme="@style/Theme.EssentialTrailerHire"
         tools:targetApi="31">
         <activity
+            android:name=".ChatActivity"
+            android:exported="false" />
+        <activity
             android:name=".BarcodeReaderActivity"
             android:exported="false" />
         <activity
@@ -32,29 +35,23 @@
             android:exported="false" />
         <activity
             android:name=".RentalReportsActivity"
-            android:exported="false"
-          />
+            android:exported="false" />
         <activity
             android:name=".IncomingTrailersActivity"
-            android:exported="false"
-     />
+            android:exported="false" />
         <activity
             android:name=".ReceiveTrailerActivity"
-            android:exported="false"
-         />
+            android:exported="false" />
         <activity
             android:name=".TrailerRentalActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan"
-          />
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".MainMenu"
-            android:exported="false"
-         />
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-      >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

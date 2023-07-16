@@ -1,5 +1,7 @@
 package com.pitechitsolutions.essentialtrailerhire;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -25,6 +27,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.HashMap;
+
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText inputEmail, inputPassword, inputLatitude, inputLongitude;
@@ -33,7 +37,7 @@ public class RegisterActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
-
+    private DatabaseReference chatsRef;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 123;
 
 
@@ -45,6 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
         // Initialize auth and mDatabase as before
         auth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        chatsRef = FirebaseDatabase.getInstance().getReference("chats");
 
         inputEmail = findViewById(R.id.branchEmail);
         inputPassword = findViewById(R.id.branchPassword);
@@ -116,6 +121,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 String userId = task.getResult().getUser().getUid();
                                 Branch branch = new Branch(email, password, finalLatitude, finalLongitude);
                                 mDatabase.child("branches").child(userId).setValue(branch);
+                                initChatNode(userId);
                                 startActivity(new Intent(RegisterActivity.this, MainMenu.class));
                                 finish();
                             }
@@ -143,5 +149,11 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+    private void initChatNode(String newBranchId) {
+        HashMap<String, String> firstMessage = new HashMap<>();
+        firstMessage.put("1", "Welcome to the chat!");
+        chatsRef.child(newBranchId).setValue(firstMessage)
+                .addOnFailureListener(e -> Log.e(TAG, "Error initializing chat: ", e));
     }
 }
