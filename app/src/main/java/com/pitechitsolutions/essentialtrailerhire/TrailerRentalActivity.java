@@ -2,12 +2,14 @@ package com.pitechitsolutions.essentialtrailerhire;
 
 import static android.content.ContentValues.TAG;
 import java.util.concurrent.TimeUnit;
+import android.Manifest;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -31,6 +33,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.github.gcacace.signaturepad.views.SignaturePad;
 import com.google.firebase.auth.FirebaseAuth;
@@ -105,6 +109,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
     private Bitmap signatureBitmap;
 
     private Trailer scannedTrailer;
+    private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -470,18 +475,41 @@ public class TrailerRentalActivity extends AppCompatActivity {
         btnCaptureDriversLicensePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE);
+                if (ContextCompat.checkSelfPermission(v.getContext(),
+                        Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    // Permission is not granted
+                    ActivityCompat.requestPermissions(TrailerRentalActivity.this,
+                            new String[]{Manifest.permission.CAMERA},
+                            MY_PERMISSIONS_REQUEST_CAMERA);
+                } else {
+                    // Permission has already been granted
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE);
+                    }
                 }
             }
         });
+
         btnCaptureVehicleDiskPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_VEHICLE_DISK);
+                if (ContextCompat.checkSelfPermission(v.getContext(),
+                        Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    // Permission is not granted
+                    ActivityCompat.requestPermissions(TrailerRentalActivity.this,
+                            new String[]{Manifest.permission.CAMERA},
+                            MY_PERMISSIONS_REQUEST_CAMERA);
+                } else {
+                    // Permission has already been granted
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_VEHICLE_DISK);
+                    }
                 }
             }
         });
@@ -640,6 +668,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                                                             rental.setCurrentLocation(inputCurrentLocation.getText().toString().trim());
                                                             rental.setDeliveryDestination(inputDeliveryDestination.getSelectedItem().toString().trim());
                                                             rental.setTrailerRemarks(inputTrailerRemarks.getText().toString().trim());
+                                                            rental.setCharge(tvAmtToPay.getText().toString().trim());
 
 
                                                             // Set rentalDateTime and selectedDeliveryDateTime directly from TextView
@@ -1093,5 +1122,24 @@ public class TrailerRentalActivity extends AppCompatActivity {
             return null;
         }
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_CAMERA: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! You can perform your camera related task.
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
 
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
 }

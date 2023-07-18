@@ -23,6 +23,7 @@ public class Rental {
     private String customerName;
     private String customerSurname;
     private String customerContactNumber;
+    private String charge;
 
 
     public Rental() {
@@ -31,7 +32,7 @@ public class Rental {
 
     // Add all-args constructor and getter/setter methods below
 
-    public Rental(String rentalId, String invoiceNumber, String driverLicenseUrl, String vehicleDiskUrl, String signatureUrl, String bookingStatus, String branchId, String b2bInvoiceNumber, String clientSignature, String customerId, boolean oneWayTrip, String rentalDateTime, String selectedDeliveryDateTime, boolean termsAndConditionsAccepted, String trailerId, String trailerBarcode, String currentLocation, String deliveryDestination, String trailerRemarks) {
+    public Rental(String rentalId, String invoiceNumber, String driverLicenseUrl, String vehicleDiskUrl, String signatureUrl, String bookingStatus, String branchId, String b2bInvoiceNumber, String clientSignature, String customerId, boolean oneWayTrip, String rentalDateTime, String selectedDeliveryDateTime, boolean termsAndConditionsAccepted, String trailerId, String trailerBarcode, String currentLocation, String deliveryDestination, String trailerRemarks, String charge) {
         this.rentalId = rentalId;
         this.invoiceNumber = invoiceNumber;
         this.driverLicenseUrl = driverLicenseUrl;
@@ -51,10 +52,19 @@ public class Rental {
         this.currentLocation = currentLocation;
         this.deliveryDestination = deliveryDestination;
         this.trailerRemarks = trailerRemarks;
+        this.charge = charge;
 
     }
 
     // Getter and Setter methods
+
+    public String getCharge()  {
+        return charge;
+    }
+
+    public void setCharge(String charge) {
+        this.charge = charge;
+    }
 
     public String getTrailerBarcode() {
         return trailerBarcode;
