@@ -853,8 +853,14 @@ public class TrailerRentalActivity extends AppCompatActivity {
         double distance = R * c; // convert to kilometers
         long roundedDistance = Math.round(distance); // round to the nearest whole number
 
-        return roundedDistance;
+        double finalDistance = roundedDistance + (roundedDistance / 3.0); // add a third of the distance to the total
+
+        long roundedFinalDistance = Math.round(finalDistance); // round the final distance to the nearest whole number
+
+        return roundedFinalDistance;
     }
+
+
 
     private void showTermsAndConditions() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

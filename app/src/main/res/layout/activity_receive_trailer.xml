@@ -3,117 +3,58 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F0F0F0"
-    android:padding="16dp">
+    android:padding="24dp">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/rounded_rectangle"
-            android:padding="16dp"
-            android:layout_marginBottom="10dp"
-            android:orientation="horizontal">
-
-
-
-            <EditText
-                android:id="@+id/et_barcode"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:hint="Scanned QR Code will appear here"
-                android:editable="false"
-                android:focusable="false" />
-
-            <Button
-                android:id="@+id/btnScanBarcode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Scan QR Code"
-                android:backgroundTint="@color/orange"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/rounded_rectangle"
-            android:padding="16dp"
-            android:layout_marginBottom="10dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Select Trailer Condition:"
-                android:textSize="16sp" />
-
-            <Spinner
-                android:id="@+id/spinner_condition"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:entries="@array/trailer_conditions"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/rounded_rectangle"
-            android:padding="16dp"
-            android:layout_marginBottom="10dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Remarks:"
-                android:textSize="16sp" />
-
-            <EditText
-                android:id="@+id/et_remarks"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Enter remarks here" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/rounded_rectangle"
-            android:padding="16dp"
-            android:layout_marginBottom="10dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Return Date:"
-                android:textSize="16sp" />
-
-            <Button
-                android:id="@+id/btn_pick_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Pick a date"
-                android:backgroundTint="@color/orange"/>
-
-            <TextView
-                android:id="@+id/tv_return_date"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="" />
-        </LinearLayout>
+        android:layout_height="wrap_content">
 
         <Button
-            android:id="@+id/btn_submit"
+            android:id="@+id/scan_qr_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Submit"
+            android:text="Scan QR code"
             android:backgroundTint="@color/orange"
-            android:layout_marginTop="20dp"/>
+            android:textColor="#FFFFFF"
+            android:elevation="8dp" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/qr_code_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/scan_qr_code"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <Spinner
+            android:id="@+id/trailer_condition"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/qr_code_result"
+            android:entries="@array/trailer_conditions"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <EditText
+            android:id="@+id/remarks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/trailer_condition"
+            android:hint="Remarks"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <TextView
+            android:id="@+id/current_date_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/remarks"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+    </RelativeLayout>
 </ScrollView>
