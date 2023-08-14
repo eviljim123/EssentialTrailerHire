@@ -9,11 +9,59 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <Spinner
+            android:id="@+id/trailer_condition"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/trailer_conditions"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <EditText
+            android:id="@+id/remarks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/trailer_condition"
+            android:hint="Trailer Remarks"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
+        <CheckBox
+            android:id="@+id/spare_wheel_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/remarks"
+            android:layout_marginTop="16dp"
+            android:text="Spare Wheel in Place?" />
+
+        <Button
+            android:id="@+id/photo_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/spare_wheel_checkbox"
+            android:text="Take Photo Of Spare Wheel"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/orange"
+            android:textColor="#FFFFFF"
+            android:elevation="8dp" />
+
+        <TextView
+            android:id="@+id/current_date_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/photo_button"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/edit_text_style"
+            android:padding="12dp" />
+
         <Button
             android:id="@+id/scan_qr_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Scan QR code"
+            android:layout_below="@+id/current_date_time"
+            android:layout_marginTop="16dp"
             android:backgroundTint="@color/orange"
             android:textColor="#FFFFFF"
             android:elevation="8dp" />
@@ -24,35 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/scan_qr_code"
             android:layout_marginTop="16dp"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
-
-        <Spinner
-            android:id="@+id/trailer_condition"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/qr_code_result"
-            android:entries="@array/trailer_conditions"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
-
-        <EditText
-            android:id="@+id/remarks"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/trailer_condition"
-            android:hint="Remarks"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
-
-        <TextView
-            android:id="@+id/current_date_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/remarks"
-            android:layout_marginTop="16dp"
+            android:text="QR Code Result"
             android:background="@drawable/edit_text_style"
             android:padding="12dp" />
 

@@ -1,6 +1,7 @@
 package com.pitechitsolutions.essentialtrailerhire;
 
 public class Rental {
+    private String slipUrl;
     private String rentalId;
     private String invoiceNumber;
     private String driverLicenseUrl;
@@ -32,7 +33,7 @@ public class Rental {
 
     // Add all-args constructor and getter/setter methods below
 
-    public Rental(String rentalId, String invoiceNumber, String driverLicenseUrl, String vehicleDiskUrl, String signatureUrl, String bookingStatus, String branchId, String b2bInvoiceNumber, String clientSignature, String customerId, boolean oneWayTrip, String rentalDateTime, String selectedDeliveryDateTime, boolean termsAndConditionsAccepted, String trailerId, String trailerBarcode, String currentLocation, String deliveryDestination, String trailerRemarks, String charge) {
+    public Rental(String rentalId, String invoiceNumber, String driverLicenseUrl, String vehicleDiskUrl, String signatureUrl, String bookingStatus, String branchId, String b2bInvoiceNumber, String clientSignature, String customerId, boolean oneWayTrip, String rentalDateTime, String selectedDeliveryDateTime, boolean termsAndConditionsAccepted, String trailerId, String trailerBarcode, String currentLocation, String deliveryDestination, String trailerRemarks, String charge, String slipUrl) {
         this.rentalId = rentalId;
         this.invoiceNumber = invoiceNumber;
         this.driverLicenseUrl = driverLicenseUrl;
@@ -53,6 +54,7 @@ public class Rental {
         this.deliveryDestination = deliveryDestination;
         this.trailerRemarks = trailerRemarks;
         this.charge = charge;
+        this.slipUrl = slipUrl;
 
     }
 
@@ -170,6 +172,14 @@ public class Rental {
         this.clientSignature = clientSignature;
     }
 
+    public String getSlipUrl() {
+        return slipUrl;
+    }
+
+    public void setSlipUrl(String slipUrl) {
+        this.slipUrl = slipUrl;
+    }
+
     public String getCustomerId() {
         return customerId;
     }
@@ -218,3 +228,4 @@ public class Rental {
         this.trailerId = trailerId;
     }
 }
+

@@ -6,11 +6,13 @@ import android.Manifest;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -37,6 +39,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.github.gcacace.signaturepad.views.SignaturePad;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -67,6 +71,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
     // Declare currentBranchId as a global variable
     private String currentBranchId;
     private StorageReference signatureCaptureRef;
+    private String rentalId;
     private Rental rental;
     TextView trailerStatus, trailerVin, trailerLicensePlate, trailerConditionAfterScan;
     private EditText inputName, inputSurname, inputIdNumber, inputContactNumber, inputEmail;
@@ -84,11 +89,12 @@ public class TrailerRentalActivity extends AppCompatActivity {
     // Declare ImageViews to display the captured images
     private ImageView driversLicenseImageView, vehicleDiskImageView;
     // Declare a request code for your camera intent
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_IMAGE_CAPTURE = 3;
     // Declare two different request codes for camera intents
     private static final int REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE = 1;
     private static final int REQUEST_IMAGE_CAPTURE_VEHICLE_DISK = 2;
     private Button scanQrCodeButton;
+    private Dialog progressdialog; // Declare here
 
     DatePickerDialog datePickerDialog;
     TimePickerDialog timePickerDialog;
@@ -103,13 +109,18 @@ public class TrailerRentalActivity extends AppCompatActivity {
     private final DoubleWrapper currentBranchLongitude = new DoubleWrapper(0);
     private final DoubleWrapper selectedBranchLatitude = new DoubleWrapper(0);
     private final DoubleWrapper selectedBranchLongitude = new DoubleWrapper(0);
+    private String branchabbr;
+    private String s2sMachineCode;
 
     private Bitmap driversLicenseBitmap;
     private Bitmap vehicleDiskBitmap;
+
     private Bitmap signatureBitmap;
 
     private Trailer scannedTrailer;
     private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,43 +173,100 @@ public class TrailerRentalActivity extends AppCompatActivity {
         Button btnCalculateFee = findViewById(R.id.btnCalculateFee);
         TextView tvAmtToPay = findViewById(R.id.tvAmtToPay);
 
-        btnViewTermsConditions.setOnClickListener(new View.OnClickListener() {
+        String monthAbbreviation = new SimpleDateFormat("MMM", Locale.ENGLISH).format(calendar.getTime()).toUpperCase();
+
+        DatabaseReference rentalsRef = FirebaseDatabase.getInstance().getReference("rentals");
+        String invoicePrefix = branchabbr + monthAbbreviation + s2sMachineCode;
+
+        rentalsRef.orderByChild("invoiceNumber").startAt(invoicePrefix).endAt(invoicePrefix + "\uf8ff").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onClick(View v) {
-                showTermsAndConditions();
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long maxNumber = 0;
+                for (DataSnapshot rentalSnapshot : dataSnapshot.getChildren()) {
+                    String invoiceNumber = rentalSnapshot.child("invoiceNumber").getValue(String.class);
+                    if (invoiceNumber != null && invoiceNumber.startsWith(invoicePrefix)) {
+                        long numberPart = Long.parseLong(invoiceNumber.substring(invoicePrefix.length()));
+                        maxNumber = Math.max(maxNumber, numberPart);
+                    }
+                }
+                String nextInvoiceNumber = invoicePrefix + String.format("%07d", maxNumber + 1);
+                inputInvoiceNumber.setText(nextInvoiceNumber);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e("FirebaseData", "Error fetching data", databaseError.toException());
             }
         });
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             String currentBranchId = currentUser.getUid();
-
             DatabaseReference branchDbReference = FirebaseDatabase.getInstance().getReference("branches");
             branchDbReference.child(currentBranchId).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    String branchName = dataSnapshot.child("branchName").getValue(String.class);
-                    Double latitude = dataSnapshot.child("latitude").getValue(Double.class);
-                    Double longitude = dataSnapshot.child("longitude").getValue(Double.class);
-                    calculateAndSetDistance();
-                    if (branchName != null && latitude != null && longitude != null) {
+                    // Populate the Branch object with the data from Firebase
+                    Branch currentBranch = dataSnapshot.getValue(Branch.class);
+
+                    if (currentBranch != null) {
+                        // Use the properties from currentBranch for the branch abbreviation and machine code
+                        String branchabbr = currentBranch.getBranchAbbreviation();
+                        String s2sMachineCode = currentBranch.getS2SMachineCode();
+
+                        // Set the branch details in the UI components
                         EditText currentLocation = findViewById(R.id.current_location);
-                        currentLocation.setText(branchName);
-                        currentBranchLatitude.value = latitude;
-                        currentBranchLongitude.value = longitude;
+                        currentLocation.setText(currentBranch.getBranchName());
+
+                        currentBranchLatitude.value = currentBranch.getLatitude();
+                        currentBranchLongitude.value = currentBranch.getLongitude();
+
+                        // Calculate and set distance based on the newly populated branch details
+                        calculateAndSetDistance();
+
+                        // Now that you have branchabbr and s2sMachineCode, generate the invoice number
+                        DatabaseReference rentalsRef = FirebaseDatabase.getInstance().getReference("rentals");
+                        String invoicePrefix = branchabbr + "-" + s2sMachineCode + "-" + monthAbbreviation + "-";
+
+                        rentalsRef.orderByChild("invoiceNumber").startAt(invoicePrefix).endAt(invoicePrefix + "\uf8ff").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                long maxNumber = 0;
+                                for (DataSnapshot rentalSnapshot : dataSnapshot.getChildren()) {
+                                    String invoiceNumber = rentalSnapshot.child("invoiceNumber").getValue(String.class);
+                                    if (invoiceNumber != null && invoiceNumber.startsWith(invoicePrefix)) {
+                                        long numberPart = Long.parseLong(invoiceNumber.substring(invoicePrefix.length()));
+                                        maxNumber = Math.max(maxNumber, numberPart);
+                                    }
+                                }
+                                String nextInvoiceNumber = invoicePrefix + String.format("%07d", maxNumber + 1);
+                                inputInvoiceNumber.setText(nextInvoiceNumber);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                Log.e("FirebaseData", "Error fetching data", databaseError.toException());
+                            }
+                        });
+
                     } else {
-                        // Log a message or handle the case where branch name or latitude or longitude is null
-                        Log.e("FirebaseData", "Branch with id " + currentBranchId + " has null name or coordinates.");
+                        Log.e("FirebaseData", "Branch with id " + currentBranchId + " is null.");
                     }
                 }
 
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
-                    // Log the error message
                     Log.e("FirebaseData", "Error fetching data", databaseError.toException());
                 }
             });
         }
+
+        btnViewTermsConditions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTermsAndConditions();
+            }
+        });
         ArrayList<String> dropdownItems = new ArrayList<>();
         List<Customer> customerList = new ArrayList<>();
 
@@ -295,7 +363,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                 // whenever data at this location is updated.
 
                 Trailer trailer = dataSnapshot.getValue(Trailer.class);
-                if(trailer != null){
+                if (trailer != null) {
                     // Use your trailer object here
                     Log.i("Trailer Data", "Trailer data: " + trailer.getBarcode());
                 } else {
@@ -375,7 +443,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                 Log.e("FirebaseData", "Error fetching data", databaseError.toException());
             }
         });
-        String[] conditions = new String[]{"Great", "Good", "Average", "Bad", "Inoperable"};
+        String[] conditions = new String[]{"Great", "Average", "Bad"};
         ArrayAdapter<String> trailerConditionAdapter = new ArrayAdapter<>(TrailerRentalActivity.this,
                 android.R.layout.simple_spinner_dropdown_item, conditions);
         inputTrailerCondition.setAdapter(trailerConditionAdapter);
@@ -391,6 +459,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                 integrator.initiateScan();
             }
         });
+
 
         btnCalculateFee.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -454,7 +523,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
                         }
                     } else {
                         // For non one-way rentals, fee is based on duration and trailer type
-                        fee = (int)duration * price;
+                        fee = (int) duration * price;
                     }
 
                     tvAmtToPay.setText("Amount To Pay: " + fee);
@@ -584,6 +653,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
         btnRentTrailer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                rentalId = mDatabase.child("rentals").push().getKey();
                 // Validate fields before processing to Firebase
                 if (TextUtils.isEmpty(inputName.getText()) ||
                         TextUtils.isEmpty(inputSurname.getText()) ||
@@ -603,8 +673,19 @@ public class TrailerRentalActivity extends AppCompatActivity {
                     Log.e(TAG, "Empty field(s) detected. Aborting operation.");
                     return;
                 }
+                // Show toast message to the user before starting the camera
+                Toast.makeText(TrailerRentalActivity.this, "Take A Picture of the S2S Slip", Toast.LENGTH_LONG).show();
 
-                // Instead of using the Uid from auth, use inputIdNumber as the customerId
+// Start the camera activity to take the picture
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
+
+                Dialog progressdialog = new Dialog(TrailerRentalActivity.this);
+                progressdialog.setContentView(R.layout.dialog_progress);
+                progressdialog.setCancelable(false);
+                progressdialog.show();
                 String customerId = inputIdNumber.getText().toString().trim();
                 Customer customer = new Customer(
                         inputName.getText().toString().trim(),
@@ -616,33 +697,23 @@ public class TrailerRentalActivity extends AppCompatActivity {
                 );
                 System.out.println("customer = " + customer);
                 mDatabase.child("customers").child(customerId).setValue(customer);
-
                 String rentalId = mDatabase.child("rentals").push().getKey();
                 String inputTrailerBarcodeStr = inputTrailerBarcode.getText().toString().trim();
-
-                // Create a query to find the trailer by its barcode
                 Query trailerQuery = mDatabase.child("trailers").orderByChild("barcode").equalTo(inputTrailerBarcodeStr);
-
                 trailerQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            // dataSnapshot is the "snapshot" of all trailers with the matching barcode
-
                             for (DataSnapshot trailer : dataSnapshot.getChildren()) {
                                 Trailer trailerInfo = trailer.getValue(Trailer.class);
                                 if (trailerInfo != null) {
-                                    // Check if the trailer is "In Transit" before proceeding
                                     if (!trailerInfo.getStatus().equals("Idle")) {
                                         Toast.makeText(TrailerRentalActivity.this, "The trailer is not available for rental", Toast.LENGTH_SHORT).show();
+                                        progressdialog.dismiss(); // Dismiss dialog if trailer not available
                                         return;
                                     }
-
-                                    // Set the trailer status to "In Transit"
                                     trailerInfo.setStatus("In Transit");
                                     trailer.getRef().setValue(trailerInfo);
-                                    // Now you can continue with your operation
-                                    // Upload the license photo
                                     uploadPictureToFirebase("Licence Captures", driversLicenseImageView, customerId, rentalId, new OnUploadCompleteListener() {
                                         @Override
                                         public void onComplete(String licenseUrl) {
@@ -650,13 +721,11 @@ public class TrailerRentalActivity extends AppCompatActivity {
                                             uploadPictureToFirebase("Disk Captures", vehicleDiskImageView, customerId, rentalId, new OnUploadCompleteListener() {
                                                 @Override
                                                 public void onComplete(String vehicleDiskUrl) {
-                                                    // Upload the signature
                                                     uploadPictureToFirebase("Signature Captures", signaturePad, customerId, rentalId, new OnUploadCompleteListener() {
                                                         @Override
                                                         public void onComplete(String signatureUrl) {
                                                             // Create a new Rental instance
                                                             Rental rental = new Rental();
-
                                                             rental.setRentalId(rentalId);
                                                             rental.setInvoiceNumber(inputInvoiceNumber.getText().toString().trim());
                                                             rental.setDriverLicenseUrl(licenseUrl);
@@ -666,56 +735,35 @@ public class TrailerRentalActivity extends AppCompatActivity {
                                                             rental.setCustomerId(customerId);
                                                             rental.setTrailerBarcode(inputTrailerBarcodeStr);
                                                             rental.setCurrentLocation(inputCurrentLocation.getText().toString().trim());
-                                                            rental.setDeliveryDestination(inputDeliveryDestination.getSelectedItem().toString().trim());
+
+                                                            // Determine the delivery destination based on checkbox
+                                                            CheckBox oneWayCheckBox = findViewById(R.id.one_way);
+                                                            String deliveryDestination;
+                                                            if (oneWayCheckBox.isChecked()) {
+                                                                deliveryDestination = inputDeliveryDestination.getSelectedItem().toString().trim();
+                                                            } else {
+                                                                deliveryDestination = inputCurrentLocation.getText().toString().trim(); // Set to current location if checkbox is not checked
+                                                            }
+                                                            rental.setDeliveryDestination(deliveryDestination);
                                                             rental.setTrailerRemarks(inputTrailerRemarks.getText().toString().trim());
                                                             rental.setCharge(tvAmtToPay.getText().toString().trim());
-
-
-                                                            // Set rentalDateTime and selectedDeliveryDateTime directly from TextView
                                                             TextView tvRentalDateTime = findViewById(R.id.tvRentalDateTime);
                                                             rental.setRentalDateTime(tvRentalDateTime.getText().toString());
-
                                                             TextView tvDeliveryDateTime = findViewById(R.id.tvDeliveryDateTime);
                                                             rental.setSelectedDeliveryDateTime(tvDeliveryDateTime.getText().toString());
 
-                                                            // Inside the ValueEventListener for the trailerQuery
-                                                            // Create an IncomingTrailer instance
                                                             IncomingTrailer incomingTrailer = new IncomingTrailer();
-
-                                                            incomingTrailer.setBranchID(inputCurrentLocation.getText().toString().trim()); // Assuming the current location EditText holds the branch ID
-                                                            incomingTrailer.setDeliveryBranch(inputDeliveryDestination.getSelectedItem().toString().trim()); // Assuming the delivery destination Spinner holds the delivery branch ID
-                                                            incomingTrailer.setEstimatedArrivalDateTime(tvDeliveryDateTime.getText().toString()); // Assuming this TextView holds the delivery date and time
-                                                            incomingTrailer.setOriginBranch(inputCurrentLocation.getText().toString().trim()); // Assuming the current location EditText holds the origin branch ID
+                                                            incomingTrailer.setBranchID(inputCurrentLocation.getText().toString().trim());
+                                                            incomingTrailer.setDeliveryBranch(deliveryDestination); // Set the same delivery destination as rental
+                                                            incomingTrailer.setEstimatedArrivalDateTime(tvDeliveryDateTime.getText().toString());
+                                                            incomingTrailer.setOriginBranch(inputCurrentLocation.getText().toString().trim());
                                                             incomingTrailer.setStatus("In Transit");
-                                                            incomingTrailer.setTrailerId(inputTrailerBarcodeStr); // Assuming this is the trailer ID
-
-                                                            // Add the incoming trailer to Firebase
+                                                            incomingTrailer.setTrailerId(inputTrailerBarcodeStr);
                                                             mDatabase.child("incomingTrailers").child(inputTrailerBarcodeStr).setValue(incomingTrailer);
 
-
-                                                            // Check state of the checkboxes and set the corresponding values
-                                                            boolean oneWayTrip = oneWayCheckBox.isChecked();
-                                                            rental.setOneWayTrip(oneWayTrip);
-
-                                                            boolean termsAndConditionsAccepted = inputTermsAndConditions.isChecked();
-                                                            rental.setTermsAndConditionsAccepted(termsAndConditionsAccepted);
-
-
-                                                            // Add logic to update condition and estimatedDistance in Trailers and oneWayTrip before saving it to firebase.
-                                                            trailerInfo.setCondition(getTrailerCondition());
-                                                            double newEstimatedDistance = getEstimatedDistance();
-                                                            double currentEstimatedDistance = trailerInfo.getEstimatedDistance();
-                                                            trailerInfo.setEstimatedDistance(currentEstimatedDistance + newEstimatedDistance);
-                                                            trailerInfo.setOneWayTrip(getOneWayTrip());
-                                                            trailer.getRef().setValue(trailerInfo);
-
-                                                            // Add the rental to Firebase
                                                             mDatabase.child("rentals").child(rentalId).setValue(rental);
-
-                                                            // Add notification after rental successfully added
                                                             Toast.makeText(TrailerRentalActivity.this, "Trailer successfully rented.", Toast.LENGTH_SHORT).show();
-
-                                                            // Reset the form
+                                                            progressdialog.dismiss();
                                                             resetForm();
                                                         }
                                                     });
@@ -726,34 +774,17 @@ public class TrailerRentalActivity extends AppCompatActivity {
                                 }
                             }
                         } else {
-                            Toast.makeText(TrailerRentalActivity.this, "The trailer does not exist", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(TrailerRentalActivity.this, "No trailer found with the entered barcode", Toast.LENGTH_SHORT).show();
+                            progressdialog.dismiss();
                         }
                     }
 
-
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        // Use a switch statement to handle various error codes
-                        switch (databaseError.getCode()) {
-                            case DatabaseError.DISCONNECTED:
-                                Toast.makeText(TrailerRentalActivity.this, "Network disconnected!", Toast.LENGTH_SHORT).show();
-                                break;
-                            case DatabaseError.NETWORK_ERROR:
-                                Toast.makeText(TrailerRentalActivity.this, "Network error!", Toast.LENGTH_SHORT).show();
-                                break;
-                            case DatabaseError.PERMISSION_DENIED:
-                                Toast.makeText(TrailerRentalActivity.this, "You don't have permission to read/write this data", Toast.LENGTH_SHORT).show();
-                                break;
-                            case DatabaseError.OPERATION_FAILED:
-                                Toast.makeText(TrailerRentalActivity.this, "The server failed to process the operation", Toast.LENGTH_SHORT).show();
-                                break;
-                            default:
-                                // Default case for other errors
-                                Toast.makeText(TrailerRentalActivity.this, "Unknown error occurred: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                break;
-                        }
-
-                        Log.e(TAG, "Error occurred: " + databaseError.getMessage());
+                        Toast.makeText(TrailerRentalActivity.this, "Failed to rent the trailer: " + databaseError.getMessage(), Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Failed to read value.", databaseError.toException());
+                        // Dismiss progress dialog here too
+                        progressdialog.dismiss();
                     }
                 });
             }
@@ -761,68 +792,127 @@ public class TrailerRentalActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if (result != null) {
-            if (result.getContents() == null) {
-                Log.e("Scan*******", "Cancelled scan");
-            } else {
-                Log.e("Scan", "Scanned");
-                String scannedBarcode = result.getContents();
-                Log.e("Scan", "Scanned QR Code: " + scannedBarcode);
-                Log.d("Barcode", "Scanned QR Code: " + scannedBarcode);
+        @Override
+        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+            if (result != null) {
+                if (result.getContents() == null) {
+                    Log.e("Scan*******", "Cancelled scan");
+                } else {
+                    Log.e("Scan", "Scanned");
+                    String scannedBarcode = result.getContents();
+                    Log.e("Scan", "Scanned QR Code: " + scannedBarcode);
+                    Log.d("Barcode", "Scanned QR Code: " + scannedBarcode);
 
-                inputTrailerBarcode.setText(scannedBarcode);
-                DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-                mDatabase.child("trailers").addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Log.d("Firebase", "Data: " + dataSnapshot.toString());
-                        scannedTrailer = null;
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            Trailer trailer = snapshot.getValue(Trailer.class);
-                            if (trailer != null) {
-                                Log.d("Barcode", "Comparing with: " + trailer.getBarcode());
-                                if (scannedBarcode.equals(trailer.getBarcode())) {
-                                    scannedTrailer = trailer;
-                                    break;
+                    inputTrailerBarcode.setText(scannedBarcode);
+                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+                    mDatabase.child("trailers").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Log.d("Firebase", "Data: " + dataSnapshot.toString());
+                            scannedTrailer = null;
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                Trailer trailer = snapshot.getValue(Trailer.class);
+                                if (trailer != null) {
+                                    Log.d("Barcode", "Comparing with: " + trailer.getBarcode());
+                                    if (scannedBarcode.equals(trailer.getBarcode())) {
+                                        scannedTrailer = trailer;
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        if (scannedTrailer == null) {
-                            Toast.makeText(TrailerRentalActivity.this, "The trailer does not exist", Toast.LENGTH_SHORT).show();
-                            return;
-                        } else if (scannedTrailer.getStatus().equals("In Transit")) {
-                            Toast.makeText(TrailerRentalActivity.this, "The trailer is not available for rental", Toast.LENGTH_SHORT).show();
-                            return;
+                            if (scannedTrailer == null) {
+                                Toast.makeText(TrailerRentalActivity.this, "The trailer does not exist", Toast.LENGTH_SHORT).show();
+                                return;
+                            } else if (scannedTrailer.getStatus().equals("In Transit")) {
+                                Toast.makeText(TrailerRentalActivity.this, "The trailer is not available for rental", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            // If trailer exists and is not in transit, then update the fields.
+                            trailerStatus.setText(scannedTrailer.getStatus());
+                            trailerVin.setText(scannedTrailer.getVinNo());
+                            trailerLicensePlate.setText(scannedTrailer.getLicensePlateNumber());
+                            trailerConditionAfterScan.setText(scannedTrailer.getCondition());
                         }
 
-                        // If trailer exists and is not in transit, then update the fields.
-                        trailerStatus.setText(scannedTrailer.getStatus());
-                        trailerVin.setText(scannedTrailer.getVinNo());
-                        trailerLicensePlate.setText(scannedTrailer.getLicensePlateNumber());
-                        trailerConditionAfterScan.setText(scannedTrailer.getCondition());
-                    }
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.w(TAG, "Failed to read value.", error.toException());
+                        }
+                    });
+                }
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE && resultCode == RESULT_OK) {
+                Bundle extras = data.getExtras();
+                driversLicenseBitmap = (Bitmap) extras.get("data");
+                driversLicenseImageView.setImageBitmap(driversLicenseBitmap);
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE_VEHICLE_DISK && resultCode == RESULT_OK) {
+                Bundle extras = data.getExtras();
+                vehicleDiskBitmap = (Bitmap) extras.get("data");
+                vehicleDiskImageView.setImageBitmap(vehicleDiskBitmap);
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
 
-                    @Override
-                    public void onCancelled(DatabaseError error) {
-                        Log.w(TAG, "Failed to read value.", error.toException());
-                    }
-                });
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                byte[] imageData = baos.toByteArray();
+
+                String fileName = inputCurrentLocation.getText().toString() +
+                        inputInvoiceNumber.getText().toString() +
+                        ".jpg";
+                // Upload to Firebase
+                StorageReference storageRef = FirebaseStorage.getInstance().getReference();
+                StorageReference s2sSlipsRef = storageRef.child("S2S Slips/" + fileName);
+
+                s2sSlipsRef.putBytes(imageData)
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // Get the download URL
+                                s2sSlipsRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        // uri contains the download URL
+                                        String downloadUrl = uri.toString();
+
+                                        // Assuming rentalId is already defined earlier in your code
+                                        mDatabase.child("rentals").child(rentalId).child("slipUrl").setValue(downloadUrl)
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        Toast.makeText(TrailerRentalActivity.this, "Image URL saved successfully", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Toast.makeText(TrailerRentalActivity.this, "Failed to save image URL: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(TrailerRentalActivity.this, "Failed to get download URL: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                Toast.makeText(TrailerRentalActivity.this, "Failed to upload image: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+                                // You might want to dismiss your progress dialog here as well
+                                progressdialog.dismiss();
+                            }
+                        });
+
+            } else {
+                super.onActivityResult(requestCode, resultCode, data);
             }
-        } else if (requestCode == REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            driversLicenseBitmap = (Bitmap) extras.get("data");
-            driversLicenseImageView.setImageBitmap(driversLicenseBitmap);
-        } else if (requestCode == REQUEST_IMAGE_CAPTURE_VEHICLE_DISK && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            vehicleDiskBitmap = (Bitmap) extras.get("data");
-            vehicleDiskImageView.setImageBitmap(vehicleDiskBitmap);
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
         }
-    }
+
 
 
     private void calculateAndSetDistance() {
@@ -1148,4 +1238,12 @@ public class TrailerRentalActivity extends AppCompatActivity {
             // permissions this app might request.
         }
     }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
 }

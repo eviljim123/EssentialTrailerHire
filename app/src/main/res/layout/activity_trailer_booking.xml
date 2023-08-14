@@ -118,12 +118,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Client Residential Address"/>
 
-            <!-- B2B Invoice Number -->
-            <EditText
-                android:id="@+id/invoice_number"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="B2B Invoice Number"/>
+
         </LinearLayout>
 
         <!-- Vehicle Information -->
@@ -331,21 +326,33 @@
             android:text="Calculate Fee"
             android:backgroundTint="@color/orange"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/rounded_white_bg"
-            android:layout_marginBottom="16dp">
+
         <TextView
             android:id="@+id/tvAmtToPay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Amount To Pay:"/>
-        </LinearLayout>
+
+
+
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/rounded_white_bg"
+        android:layout_marginBottom="16dp">
+
+        <!-- S2S Invoice Number -->
+        <EditText
+            android:id="@+id/invoice_number"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Shop 2 Shop Invoice Number"/>
+
+    </LinearLayout>
         <!-- Signature -->
         <LinearLayout
             android:layout_width="match_parent"

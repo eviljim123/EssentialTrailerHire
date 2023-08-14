@@ -39,6 +39,8 @@ public class RegisterActivity extends AppCompatActivity {
     private LocationRequest locationRequest;
     private DatabaseReference chatsRef;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 123;
+    private EditText inputS2SMachineCode, inputBranchAbbreviation;
+
 
 
     @Override
@@ -55,6 +57,8 @@ public class RegisterActivity extends AppCompatActivity {
         inputPassword = findViewById(R.id.branchPassword);
         inputLatitude = findViewById(R.id.branchLatitude);
         inputLongitude = findViewById(R.id.branchLongitude);
+        inputS2SMachineCode = findViewById(R.id.s2sMachineCode);
+        inputBranchAbbreviation = findViewById(R.id.branchAbbreviation);
 
         Button btnRegisterBranch = findViewById(R.id.btnRegisterBranch);
         Button btnGetLocation = findViewById(R.id.btnGetLocation);
@@ -96,7 +100,8 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String email = inputEmail.getText().toString().trim();
                 String password = inputPassword.getText().toString().trim();
-
+                String s2sMachineCode = inputS2SMachineCode.getText().toString().trim();
+                String branchAbbreviation = inputBranchAbbreviation.getText().toString().trim();
                 Double latitude = null;
                 Double longitude = null;
                 try {
@@ -119,7 +124,8 @@ public class RegisterActivity extends AppCompatActivity {
                             } else {
                                 fusedLocationProviderClient.removeLocationUpdates(locationCallback);
                                 String userId = task.getResult().getUser().getUid();
-                                Branch branch = new Branch(email, password, finalLatitude, finalLongitude);
+                                // Use the new Branch constructor to add the new fields
+                                Branch branch = new Branch(email, password, finalLatitude, finalLongitude, s2sMachineCode, branchAbbreviation);
                                 mDatabase.child("branches").child(userId).setValue(branch);
                                 initChatNode(userId);
                                 startActivity(new Intent(RegisterActivity.this, MainMenu.class));
