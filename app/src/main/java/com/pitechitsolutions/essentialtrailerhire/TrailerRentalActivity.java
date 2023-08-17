@@ -1,6 +1,10 @@
 package com.pitechitsolutions.essentialtrailerhire;
 
 import static android.content.ContentValues.TAG;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 import android.Manifest;
 
@@ -8,12 +12,18 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
@@ -39,6 +49,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.github.gcacace.signaturepad.views.SignaturePad;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -68,6 +79,10 @@ import java.util.Locale;
 
 public class TrailerRentalActivity extends AppCompatActivity {
     private Date startDate;
+    private Uri photoUri;
+    private Uri driverLicensePhotoUri;
+    private Uri vehicleDiskPhotoUri;
+
     private Date endDate;
     private Trailer trailer;
     // Declare currentBranchId as a global variable
@@ -617,10 +632,20 @@ public class TrailerRentalActivity extends AppCompatActivity {
                             new String[]{Manifest.permission.CAMERA},
                             MY_PERMISSIONS_REQUEST_CAMERA);
                 } else {
-                    // Permission has already been granted
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE);
+                        File photoFile = null;
+                        try {
+                            photoFile = createImageFile("DriverLicense");  // Use a specific type for creating a file
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        if (photoFile != null) {
+                            driverLicensePhotoUri = FileProvider.getUriForFile(TrailerRentalActivity.this,
+                                    "com.pitechitsolutions.essentialtrailerhire.fileprovider", photoFile);
+                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, driverLicensePhotoUri);
+                            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE);
+                        }
                     }
                 }
             }
@@ -641,11 +666,23 @@ public class TrailerRentalActivity extends AppCompatActivity {
                     // Permission has already been granted
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_VEHICLE_DISK);
+                        File photoFile = null;
+                        try {
+                            photoFile = createImageFile("VehicleDisk");  // Use a specific type for creating a file
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        if (photoFile != null) {
+                            vehicleDiskPhotoUri = FileProvider.getUriForFile(TrailerRentalActivity.this,
+                                    "com.pitechitsolutions.essentialtrailerhire.fileprovider", photoFile);
+                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, vehicleDiskPhotoUri);
+                            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE_VEHICLE_DISK);
+                        }
                     }
                 }
             }
         });
+
         oneWayCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -906,15 +943,24 @@ public class TrailerRentalActivity extends AppCompatActivity {
                         }
                     });
                 }
-            } else if (requestCode == REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE && resultCode == RESULT_OK) {
-                Bundle extras = data.getExtras();
-                driversLicenseBitmap = (Bitmap) extras.get("data");
-                driversLicenseImageView.setImageBitmap(driversLicenseBitmap);
+            }
+            else if (requestCode == REQUEST_IMAGE_CAPTURE_DRIVERS_LICENSE && resultCode == RESULT_OK) {
+                try {
+                    driversLicenseBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), driverLicensePhotoUri);
+                    driversLicenseImageView.setImageBitmap(driversLicenseBitmap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             } else if (requestCode == REQUEST_IMAGE_CAPTURE_VEHICLE_DISK && resultCode == RESULT_OK) {
-                Bundle extras = data.getExtras();
-                vehicleDiskBitmap = (Bitmap) extras.get("data");
-                vehicleDiskImageView.setImageBitmap(vehicleDiskBitmap);
-            } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+                try {
+                    vehicleDiskBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), vehicleDiskPhotoUri);
+                    vehicleDiskImageView.setImageBitmap(vehicleDiskBitmap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
+        } else if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
 
@@ -1162,9 +1208,8 @@ public class TrailerRentalActivity extends AppCompatActivity {
     }
 
     private void uploadPictureToFirebase(String directory, View view, String customerId, String rentalId, OnUploadCompleteListener listener) {
-        view.setDrawingCacheEnabled(true);
-        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
-        view.setDrawingCacheEnabled(false);
+        Bitmap bitmap = getBitmapFromView(view);
+
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -1301,6 +1346,50 @@ public class TrailerRentalActivity extends AppCompatActivity {
             // other 'case' lines to check for other
             // permissions this app might request.
         }
+    }
+    public static void saveImageToGallery(Context context, Bitmap bitmap, String title) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, title);
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+        if (uri != null) {
+            try (OutputStream outStream = context.getContentResolver().openOutputStream(uri)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+                if (outStream != null) {
+                    outStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private File createImageFile(String type) throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = type + "_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Return the file path for use with file intents
+        return image;
+    }
+
+    private Bitmap getBitmapFromView(View view) {
+        Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(returnedBitmap);
+        Drawable bgDrawable = view.getBackground();
+        if (bgDrawable != null) {
+            bgDrawable.draw(canvas);
+        } else {
+            canvas.drawColor(Color.WHITE);
+        }
+        view.draw(canvas);
+        return returnedBitmap;
     }
 
     private void dispatchTakePictureIntent() {
