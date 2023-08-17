@@ -1,13 +1,29 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F0F0F0"
-    android:padding="24dp">
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <!-- ImageButton centered -->
+    <ImageButton
+        android:id="@+id/infoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/infobtnmainmenu"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingTop="12dp">
+
+        <!-- Removed layout_above attribute from the ImageButton, as it's now outside this RelativeLayout -->
 
         <Spinner
             android:id="@+id/trailer_condition"
@@ -16,6 +32,7 @@
             android:entries="@array/trailer_conditions"
             android:background="@drawable/edit_text_style"
             android:padding="12dp" />
+
 
         <EditText
             android:id="@+id/remarks"
@@ -76,5 +93,10 @@
             android:background="@drawable/edit_text_style"
             android:padding="12dp" />
 
+
+
     </RelativeLayout>
+
+    </LinearLayout>
+
 </ScrollView>

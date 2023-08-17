@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,6 +28,7 @@ import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Filter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -120,6 +122,8 @@ public class TrailerRentalActivity extends AppCompatActivity {
     private Trailer scannedTrailer;
     private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1;
 
+    private ImageButton infobutton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,6 +171,7 @@ public class TrailerRentalActivity extends AppCompatActivity {
         deliveryTextView.setVisibility(View.GONE);
         inputDeliveryDestination.setVisibility(View.GONE);
         storage = FirebaseStorage.getInstance();
+        infobutton = findViewById(R.id.infoButtons);
         licenseCaptureRef = storage.getReference().child("Disk Captures");
         vehicleCaptureRef = storage.getReference().child("Licence Captures");
         signatureCaptureRef = storage.getReference().child("Signature Captures");
@@ -260,6 +265,65 @@ public class TrailerRentalActivity extends AppCompatActivity {
                 }
             });
         }
+
+        infobutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(TrailerRentalActivity.this);
+                View view = LayoutInflater.from(TrailerRentalActivity.this).inflate(R.layout.dialog_instructions, null);
+
+                TextView instructionsText = view.findViewById(R.id.instructionsText);
+                instructionsText.setText("Client Database Search:\n" +
+                        "\n" +
+                        "To locate pre-existing clients, search using their ID numbers, phone numbers, names, or surnames.\n" +
+                        "Select the desired client from the search results to auto-fill essential client details.\n" +
+                        "For New Clients:\n" +
+                        "\n" +
+                        "Client Details:\n" +
+                        "\n" +
+                        "Full Name: Provide the complete name as on the identification document.\n" +
+                        "Surname: Enter the client's surname.\n" +
+                        "ID Number: Input the number from the client's official identification.\n" +
+                        "Contact Number: Record the client's primary phone number.\n" +
+                        "Email Address: Specify the client's email for communication.\n" +
+                        "Residential Address: Detail the client's current living address.\n" +
+                        "Documentation Photos:\n" +
+                        "\n" +
+                        "Driver's License: Capture a clear photograph of the client's driver's license.\n" +
+                        "Vehicle Disk: Snap a photo of the disk from the client's vehicle used to tow trailers.\n" +
+                        "Trailer Information:\n" +
+                        "\n" +
+                        "QR Code Scan: For swift input, scan the trailer's QR code. This action populates the \"Trailer Status\" section.\n" +
+                        "Estimated Distance: Inquire about the client's intended travel distance and record the value.\n" +
+                        "Current Location: This is auto-filled based on branch credentials.\n" +
+                        "One Way Option: If the trailer is destined for a different branch, check the 'One Way' box. This auto-fills the estimated distance.\n" +
+                        "Delivery Destination: For 'One Way' rentals, choose the receiving branch from the dropdown.\n" +
+                        "Trailer Condition: Examine the trailer and select the most accurate condition description from the options provided.\n" +
+                        "Remarks: Any additional notes about the trailer are mandatory. If none, please input: \"No remarks.\"\n" +
+                        "Rental & Delivery Schedule:\n" +
+                        "\n" +
+                        "Rental Date & Time: Set the timestamp when the trailer is rented out.\n" +
+                        "Delivery Date & Time: Record the client's anticipated return timestamp.\n" +
+                        "Fee Assessment:\n" +
+                        "\n" +
+                        "After registering the trailer and setting the rental schedule, compute the rental fee. Upon client agreement, proceed to payment. The Shop 2 Shop invoice number is auto-generated for your convenience.\n" +
+                        "Confirmation and Finalization:\n" +
+                        "\n" +
+                        "Signature: Have the client provide their signature for validation.\n" +
+                        "Terms & Conditions: Clients must acknowledge and accept by checking the respective box. Full terms are accessible via the \"Terms and Conditions\" tab.\n" +
+                        "Rent Trailer: Once activated, you'll be prompted to photograph the payment receipt from the Shop 2 Shop device. This action concludes the rental process, allowing a return to the main menu.\n" +
+                        "Thank you for ensuring a smooth trailer rental experience!\n");
+
+                builder.setView(view)
+                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                builder.create().show();
+            }
+        });
 
         btnViewTermsConditions.setOnClickListener(new View.OnClickListener() {
             @Override

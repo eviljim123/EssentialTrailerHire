@@ -7,9 +7,11 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,7 +54,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
     private String dialogRentalId, dialogCustomerId, dialogDeliveryDestination, dialogBarcode;
     private long dialogOverdueTimeInHours;
 
-
+     private ImageButton infoButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +67,7 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
         remarks = findViewById(R.id.remarks);
         currentDateTime = findViewById(R.id.current_date_time);
         spareWheelCheck = findViewById(R.id.spare_wheel_checkbox); // Added
+        infoButton = findViewById(R.id.infoButton);
         Button takePhotoButton = findViewById(R.id.photo_button); // Define the button inside onCreate
         // Initialize Firebase References
         FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -87,7 +90,25 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             startActivityForResult(takePictureIntent, 12345); // Request code for the camera activity
         }
     });
+
+        infoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ReceiveTrailerActivity.this); // Replace 'YourActivityName' with the name of your actual activity
+                builder.setTitle("Trailer Procedures");
+                builder.setMessage("Upon receipt of the trailer, please adhere to the following procedures:\n\n" +
+                        "Trailer Condition:\n\nFrom the provided dropdown menu, select the option that most accurately describes the current condition of the trailer.\n\n" +
+                        "Trailer Remarks:\n\nThis field is mandatory. Document any pertinent details or observations about the trailer. Should there be no comments to make, please input \"No Remarks.\"\n\n" +
+                        "Spare Wheel Verification:\n\nConfirm the presence of the spare wheel. If it is present, tick the designated checkbox; otherwise, leave it unchecked.\n\n" +
+                        "Photograph of Spare Wheel:\n\nEnsure you capture a clear photograph of the spare wheel for documentation.\n\n" +
+                        "QR Code Scan:\n\nScan the trailer's QR code. This action will inform you if there's an outstanding balance associated with the trailer. Should there be a pending amount, proceed with the payment using the S2S Payment Machine. Subsequently, take a photograph of the payment receipt. Only after this step should you select the \"Complete Rental\" option.");
+                builder.setPositiveButton("OK", null);
+                builder.show();
+            }
+        });
 }
+
+
 
     private Uri s2sImageUri;
     private AlertDialog currentDialog;

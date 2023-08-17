@@ -12,14 +12,31 @@
         android:background="@drawable/rounded_white_bg"
         android:padding="16dp">
 
+    <!-- Horizontal LinearLayout for heading and ImageButton -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
         <!-- Heading -->
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Trailer Rental"
             android:textStyle="bold"
-            android:textSize="24sp"
-            android:layout_marginBottom="16dp"/>
+            android:textSize="24sp"/>
+
+        <!-- ImageButton next to the heading on the right -->
+        <ImageButton
+            android:id="@+id/infoButtons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/infobtnmainmenu"/>
+    </LinearLayout>
 
         <!-- Client Information -->
         <LinearLayout

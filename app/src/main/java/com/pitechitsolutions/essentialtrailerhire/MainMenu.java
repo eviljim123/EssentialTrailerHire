@@ -24,6 +24,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -56,6 +57,7 @@ public class MainMenu extends AppCompatActivity {
     private static final String APP_APK_URL = "https://pitechsolutions.co.za/app-debug.apk";
     private ProgressBar progressBar;
 
+
     private Button logoutButton; // Add this line
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +72,7 @@ public class MainMenu extends AppCompatActivity {
         // Get current user email
         String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         progressBar = findViewById(R.id.progressBar);
+        ImageButton infoButton = findViewById(R.id.infoButton);
         // Initialize Firebase Database
         mDatabase = FirebaseDatabase.getInstance().getReference();
         checkForUpdates();
@@ -83,6 +86,27 @@ public class MainMenu extends AppCompatActivity {
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainMenu.this, MainActivity.class));
                 finish();
+            }
+        });
+
+        infoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new AlertDialog.Builder(MainMenu.this)
+                        .setTitle("Welcome to Essential Trailer Hire")
+                        .setMessage("Please navigate using the options below:\n\n" +
+                                "Trailer Rental:\n" +
+                                "Initiate trailer rentals with ease.\n\n" +
+                                "Check-In Trailer:\n" +
+                                "Facilitate the return process of trailers post-rental.\n\n" +
+                                "Inbound Trailers:\n" +
+                                "Monitor trailers en route to your designated branch.\n\n" +
+                                "Rental Reports:\n" +
+                                "An exclusive feature for Branch Managers to review monthly rentals.\n\n" +
+                                "Chat Support:\n" +
+                                "Should you encounter any challenges with our software, our dedicated support team is readily available to assist via chat.")
+                        .setPositiveButton("OK", null)
+                        .show();
             }
         });
 
@@ -253,7 +277,8 @@ public class MainMenu extends AppCompatActivity {
         final EditText input = new EditText(MainMenu.this);
         AlertDialog dialog = new AlertDialog.Builder(MainMenu.this)
                 .setTitle("Security Check")
-                .setMessage("Please enter your branch manager password to access Rental Reports")
+                .setMessage("Please enter your branch manager password to access Rental Reports. " +
+                        "\nIf you have lost or forgotten your Manager Password please send us an email at support@essentialtrailerhire.co.za")
                 .setView(input)
                 .setPositiveButton("Enter", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
