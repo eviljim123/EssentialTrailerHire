@@ -580,6 +580,9 @@ public class TrailerRentalActivity extends AppCompatActivity {
                         case "3m":
                             price = 350;
                             break;
+                        case "3m Livestock":
+                            price = 600;
+                            break;
                         default:
                             throw new IllegalArgumentException("Unexpected trailer size: " + trailerSize);
                     }
