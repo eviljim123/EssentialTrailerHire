@@ -1,7 +1,7 @@
 package com.pitechitsolutions.essentialtrailerhire;
-
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -10,6 +10,7 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
@@ -17,7 +18,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -38,6 +38,13 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 public class ReceiveTrailerActivity extends AppCompatActivity {
     // UI Components
+
+    private CheckBox damageToMalePlug;
+    private CheckBox oneIndicatorLightDamage;
+    private CheckBox twoIndicatorLightsDamage;
+    private CheckBox damageToWheelsOrRims;
+    private CheckBox damageToAxle;
+
     private Button scanQRCode;
     private TextView qrCodeResult;
     private Spinner trailerCondition;
@@ -53,14 +60,18 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
     private long dialogAdditionalCharge;
     private String dialogRentalId, dialogCustomerId, dialogDeliveryDestination, dialogBarcode;
     private long dialogOverdueTimeInHours;
-
      private ImageButton infoButton;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_receive_trailer);
         // Initialize UI components
+        damageToMalePlug = findViewById(R.id.damage_to_male_plug);
+        oneIndicatorLightDamage = findViewById(R.id.one_indicator_light_damage);
+        twoIndicatorLightsDamage = findViewById(R.id.two_indicator_lights_damage);
+        damageToWheelsOrRims = findViewById(R.id.damage_to_wheels_or_rims);
+        damageToAxle = findViewById(R.id.damage_to_axle);
+
         scanQRCode = findViewById(R.id.scan_qr_code);
         qrCodeResult = findViewById(R.id.qr_code_result);
         trailerCondition = findViewById(R.id.trailer_condition);
@@ -90,7 +101,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             startActivityForResult(takePictureIntent, 12345); // Request code for the camera activity
         }
     });
-
         infoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -107,35 +117,27 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             }
         });
 }
-
-
-
     private Uri s2sImageUri;
     private AlertDialog currentDialog;
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         // For capturing the S2S Slip
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-
             // Convert bitmap to Uri
             s2sImageUri = getImageUri(this, imageBitmap);
             if (currentDialog != null && !currentDialog.isShowing()) {
                 currentDialog.show();
             }
         }
-
         // For your existing image capture
         else if (requestCode == 12345 && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             imageUri = getImageUri(this, imageBitmap); // Store imageUri for later use
         }
-
         // For QR code result
         else {
             IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
@@ -150,14 +152,12 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             }
         }
     }
-
     public Uri getImageUri(Context inContext, Bitmap inImage) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
     }
-
     private void processQRCode(String qrCode) {
         rentalsRef.orderByChild("trailerBarcode").equalTo(qrCode).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -203,8 +203,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             }
         });
     }
-
-
     private void calculateOverdueCharge(String qrCode, long diffInMilliseconds, Rental rental, DataSnapshot rentalSnapshot) {
         trailersRef.orderByChild("barcode").equalTo(qrCode).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -235,7 +233,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
         builder.setPositiveButton("Complete Rental", (dialog, id) -> {
             String rentalId = rentalSnapshot.getKey(); // Assuming the rentalId is the key of rentalSnapshot
             rentalSnapshot.getRef().child("bookingStatus").setValue("Completed");
-
             trailersRef.orderByChild("barcode").equalTo(qrCodeResult.getText().toString()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -250,17 +247,14 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                     handleError(databaseError);
                 }
             });
-
             // Upload the captured image to Firebase
             if (imageUri != null) {
                 uploadImageToFirebase(imageUri);
             }
-
             // Return the user to the mainMenu activity
             Intent intent = new Intent(ReceiveTrailerActivity.this, MainMenu.class);
             startActivity(intent);
             finish();
-
             // Delete the trailer from incomingTrailers node
             DatabaseReference incomingTrailersRef = FirebaseDatabase.getInstance().getReference("incomingTrailers");
             incomingTrailersRef.child(qrCodeResult.getText().toString()).removeValue()
@@ -277,12 +271,11 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
     private long calculateAdditionalCharge(String trailerType, long overdueTimeInHours) {
         long chargePerDay;
 
         if (trailerType.equals("2.5m")) {
-            chargePerDay = 300;
+            chargePerDay = 320;
         } else { // Assume it's a "3m" trailer
             chargePerDay = 350;
         }
@@ -308,35 +301,39 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
     }
     private void createAndShowDialog(long additionalCharge, String rentalId, String customerId,
                                      long overdueTimeInHours, String deliveryDestination, String barcode) {
+        long checkboxCharges = calculateCheckboxCharges();
+        long totalCharge = additionalCharge + checkboxCharges;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(ReceiveTrailerActivity.this);
         builder.setTitle("Outstanding Charge");
-        builder.setMessage("The outstanding charge is: " + additionalCharge);
+
+        // Conditional Logic for Message and Button Visibility
+        if (totalCharge > 0) {
+            builder.setMessage("The outstanding charge is: " + totalCharge);
+            builder.setNeutralButton("Take Photo of S2S Slip", (dialog, which) -> {
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            });
+        } else {
+            builder.setMessage("No outstanding charges.");
+        }
 
         final EditText input = new EditText(ReceiveTrailerActivity.this);
         input.setHint("S2S Invoice Number");
         builder.setView(input);
 
-        builder.setNeutralButton("Take Photo of S2S Slip", (dialog, which) -> {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        });
-
         builder.setPositiveButton("Payment Confirmed", (dialog, id) -> {
             String s2sInvoiceNumber = input.getText().toString();
             String returnDate = currentDateTime.getText().toString(); // Assuming you've declared and initialized this variable elsewhere
-
             // Upload the captured image to Firebase
             if (imageUri != null) {
                 uploadImageToFirebase(imageUri);
             }
-
             if (s2sImageUri != null) {
                 uploadS2SSlipToFirebase(s2sImageUri, s2sInvoiceNumber);  // Assuming you've declared and implemented this method elsewhere
             }
-
             if (!spareWheelCheck.isChecked()) {
                 trailersRef.orderByChild("barcode").equalTo(barcode).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -345,30 +342,46 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                             trailerSnapshot.getRef().child("remarks").setValue("URGENT! NO SPARE WHEEL WHEN LAST CHECK IN!");
                         }
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         // Handle error
                     }
                 });
             }
-
             rentalsRef.child(rentalId).child("bookingStatus").setValue("Completed");
             OutstandingRental outstandingRental = new OutstandingRental(additionalCharge, customerId, overdueTimeInHours, s2sInvoiceNumber, deliveryDestination, returnDate);
             outstandingRef.child(rentalId).setValue(outstandingRental);
-
             // Show the toast
             Toast.makeText(ReceiveTrailerActivity.this, "Trailer Successfully Retrieved", Toast.LENGTH_SHORT).show();
         });
-
         builder.setNegativeButton("Cancel", (dialog, id) -> {
             dialog.dismiss();
         });
-
         AlertDialog dialog = builder.create();
         currentDialog = dialog;  // Store the reference
 
-        // Handle your Firebase operations as before
+        // Checkbox Listener to Update Dialog Message
+        CompoundButton.OnCheckedChangeListener checkboxListener = (buttonView, isChecked) -> {
+            long checkboxChargesUpdated = calculateCheckboxCharges();
+            long totalChargeUpdated = additionalCharge + checkboxChargesUpdated;
+            dialog.setMessage("The outstanding charge is: " + totalChargeUpdated);
+            if (totalChargeUpdated > 0) {
+                // Show or enable the "Take Photo" button if it was hidden or disabled
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setVisibility(View.VISIBLE);
+            } else {
+                // Hide or disable the "Take Photo" button
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setVisibility(View.GONE);
+            }
+        };
+
+        // Assuming these checkboxes are initialized elsewhere in your Activity
+        damageToMalePlug.setOnCheckedChangeListener(checkboxListener);
+        oneIndicatorLightDamage.setOnCheckedChangeListener(checkboxListener);
+        twoIndicatorLightsDamage.setOnCheckedChangeListener(checkboxListener);
+        damageToWheelsOrRims.setOnCheckedChangeListener(checkboxListener);
+        damageToAxle.setOnCheckedChangeListener(checkboxListener);
+
+        // Handle your Firebase operations
         DatabaseReference incomingTrailersRef = FirebaseDatabase.getInstance().getReference("incomingTrailers");
         incomingTrailersRef.child(qrCodeResult.getText().toString()).removeValue()
                 .addOnSuccessListener(aVoid -> {
@@ -378,7 +391,9 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                     Toast.makeText(ReceiveTrailerActivity.this, "Failed to remove trailer from incomingTrailers", Toast.LENGTH_LONG).show();
                 });
 
+        // Assuming generateAndSetInvoiceNumber() is a method you've implemented to set the invoice number
         generateAndSetInvoiceNumber(input);
+
         dialog.show();
     }
     private void handleError(DatabaseError databaseError) {
@@ -393,7 +408,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
             Toast.makeText(ReceiveTrailerActivity.this, "Failed to Upload Image", Toast.LENGTH_LONG).show();
         });
     }
-
     private void uploadS2SSlipToFirebase(Uri imageUri, String invoiceNumber) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
@@ -410,30 +424,42 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
         }
     }
 
+    private long calculateCheckboxCharges() {
+        long charges = 0;
+        CheckBox damageToMalePlug = findViewById(R.id.damage_to_male_plug);
+        CheckBox oneIndicatorLightDamage = findViewById(R.id.one_indicator_light_damage);
+        CheckBox twoIndicatorLightsDamage = findViewById(R.id.two_indicator_lights_damage);
+        CheckBox damageToWheelsOrRims = findViewById(R.id.damage_to_wheels_or_rims);
+        CheckBox damageToAxle = findViewById(R.id.damage_to_axle);
+
+        if (damageToMalePlug.isChecked()) charges += 120;
+        if (oneIndicatorLightDamage.isChecked()) charges += 400;
+        if (twoIndicatorLightsDamage.isChecked()) charges += 800;
+        if (damageToWheelsOrRims.isChecked()) charges += 1500;
+        if (damageToAxle.isChecked()) charges += 1500;
+
+        return charges;
+    }
+
 
     private void generateAndSetInvoiceNumber(EditText input) {
         DatabaseReference branchesRef = FirebaseDatabase.getInstance().getReference("branches");
         DatabaseReference rentalsRef = FirebaseDatabase.getInstance().getReference("rentals");
-
         // Get currently logged-in user's UID
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String currentBranchId = user.getUid();
-
             branchesRef.child(currentBranchId).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()) {
                         String branchabbr = dataSnapshot.child("branchabbr").getValue(String.class);
                         String s2sMachineCode = dataSnapshot.child("s2sMachineCode").getValue(String.class);
-
                         // Get current month abbreviation
                         Calendar cal = Calendar.getInstance();
                         String monthAbbr = new SimpleDateFormat("MMM", Locale.ENGLISH).format(cal.getTime()).toUpperCase();
-
                         // Build the prefix of the invoice number
                         String prefix = branchabbr + "-" + s2sMachineCode + "-" + monthAbbr + "-";
-
                         // Query rentals to determine the next number
                         rentalsRef.orderByChild("invoiceNumber").startAt(prefix).endAt(prefix + "\uf8ff").addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -451,7 +477,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                                         }
                                     }
                                 }
-
                                 String nextNumber = String.format("%07d", maxNumber + 1);
                                 input.setText(prefix + nextNumber);
                             }
@@ -463,7 +488,6 @@ public class ReceiveTrailerActivity extends AppCompatActivity {
                         });
                     }
                 }
-
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     // Handle error

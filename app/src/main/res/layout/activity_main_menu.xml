@@ -8,7 +8,15 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="10dp">
-
+        <TextView
+            android:id="@+id/headerTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="For Software Support Contact 0797140782"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginBottom="10dp"/>
         <!-- ImageButton added here -->
         <ImageButton
             android:id="@+id/infoButton"
@@ -81,6 +89,15 @@
                 android:textColor="@android:color/white"/>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/rentalLeaderBoardBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Rental Leader Board"
+                android:layout_columnWeight="1"
+                app:backgroundTint="@color/orange"
+                android:textColor="@android:color/white"/>
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/logout_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -96,6 +113,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"/>
+        <!-- Add leaderboard ListView here -->
+
+        <ListView
+            android:id="@+id/leaderboardListView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </ListView>
 
     </LinearLayout>
 

@@ -14,6 +14,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONObject;
 
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     EditText inputAdminPassword;
     Button btnRegister;
+    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,13 +42,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         inputAdminPassword = findViewById(R.id.adminPassword);
         btnRegister = findViewById(R.id.register);
-
+        mDatabase = FirebaseDatabase.getInstance().getReference();
         auth = FirebaseAuth.getInstance();
         // Check if user is already logged in
         checkUser();
         inputEmail = findViewById(R.id.username);
         inputPassword = findViewById(R.id.password);
         Button btnLogin = findViewById(R.id.login);
+
+
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

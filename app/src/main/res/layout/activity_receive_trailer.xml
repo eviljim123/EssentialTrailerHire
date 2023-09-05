@@ -9,94 +9,137 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-    <!-- ImageButton centered -->
-    <ImageButton
-        android:id="@+id/infoButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/infobtnmainmenu"/>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="12dp">
-
-        <!-- Removed layout_above attribute from the ImageButton, as it's now outside this RelativeLayout -->
-
-        <Spinner
-            android:id="@+id/trailer_condition"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:entries="@array/trailer_conditions"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
-
-
-        <EditText
-            android:id="@+id/remarks"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/trailer_condition"
-            android:hint="Trailer Remarks"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
-
-        <CheckBox
-            android:id="@+id/spare_wheel_checkbox"
+        <!-- ImageButton centered -->
+        <ImageButton
+            android:id="@+id/infoButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/remarks"
-            android:layout_marginTop="16dp"
-            android:text="Spare Wheel in Place?" />
+            android:layout_gravity="center_horizontal"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/infobtnmainmenu"/>
 
-        <Button
-            android:id="@+id/photo_button"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/spare_wheel_checkbox"
-            android:text="Take Photo Of Spare Wheel"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="@color/orange"
-            android:textColor="#FFFFFF"
-            android:elevation="8dp" />
+            android:paddingTop="12dp">
 
-        <TextView
-            android:id="@+id/current_date_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/photo_button"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
+            <Spinner
+                android:id="@+id/trailer_condition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/trailer_conditions"
+                android:background="@drawable/edit_text_style"
+                android:padding="12dp" />
 
-        <Button
-            android:id="@+id/scan_qr_code"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Scan QR code"
-            android:layout_below="@+id/current_date_time"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="@color/orange"
-            android:textColor="#FFFFFF"
-            android:elevation="8dp" />
+            <EditText
+                android:id="@+id/remarks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/trailer_condition"
+                android:hint="Trailer Remarks"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/edit_text_style"
+                android:padding="12dp" />
 
-        <TextView
-            android:id="@+id/qr_code_result"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/scan_qr_code"
-            android:layout_marginTop="16dp"
-            android:text="QR Code Result"
-            android:background="@drawable/edit_text_style"
-            android:padding="12dp" />
+            <CheckBox
+                android:id="@+id/spare_wheel_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/remarks"
+                android:layout_marginTop="16dp"
+                android:text="Spare Wheel in Place?" />
 
+            <!-- New Checkboxes -->
+            <CheckBox
+                android:id="@+id/damage_to_male_plug"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/spare_wheel_checkbox"
+                android:layout_marginTop="16dp"
+                android:text="Damage to Male Plug +R120" />
 
+            <CheckBox
+                android:id="@+id/one_indicator_light_damage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/damage_to_male_plug"
+                android:layout_marginTop="16dp"
+                android:text="1 Indicator Lights Damaged +R400" />
 
-    </RelativeLayout>
+            <CheckBox
+                android:id="@+id/two_indicator_lights_damage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/one_indicator_light_damage"
+                android:layout_marginTop="16dp"
+                android:text="2 Indicator Lights Damaged +R800" />
 
+            <CheckBox
+                android:id="@+id/damage_to_wheels_or_rims"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/two_indicator_lights_damage"
+                android:layout_marginTop="16dp"
+                android:text="Damage to any of the Wheels or Rims +R1500" />
+
+            <CheckBox
+                android:id="@+id/damage_to_axle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/damage_to_wheels_or_rims"
+                android:layout_marginTop="16dp"
+                android:text="Damage To The Axle +R1500" />
+
+            <!-- Additional Information Text -->
+            <TextView
+                android:id="@+id/additional_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/damage_to_axle"
+                android:layout_marginTop="16dp"
+                android:text="If there are any major damages, list them in the Remarks section so that we can assess the damage and bill it to the customer."
+                android:padding="12dp" />
+
+            <Button
+                android:id="@+id/photo_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/additional_info"
+                android:text="Take Photo Of Spare Wheel"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/orange"
+                android:textColor="#FFFFFF"
+                android:elevation="8dp" />
+
+            <TextView
+                android:id="@+id/current_date_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/photo_button"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/edit_text_style"
+                android:padding="12dp" />
+
+            <Button
+                android:id="@+id/scan_qr_code"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Scan QR code"
+                android:layout_below="@+id/current_date_time"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/orange"
+                android:textColor="#FFFFFF"
+                android:elevation="8dp" />
+
+            <TextView
+                android:id="@+id/qr_code_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/scan_qr_code"
+                android:layout_marginTop="16dp"
+                android:text="QR Code Result"
+                android:background="@drawable/edit_text_style"
+                android:padding="12dp" />
+        </RelativeLayout>
     </LinearLayout>
-
 </ScrollView>

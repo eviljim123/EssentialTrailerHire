@@ -46,7 +46,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 public class MainMenu extends AppCompatActivity {
-    private Button trailerBookingButton, receiveTrailerButton, incomingTrailersButton, bookingReportsButton, chatSupportBtn;
+    private Button trailerBookingButton, receiveTrailerButton, incomingTrailersButton, bookingReportsButton, chatSupportBtn, rentalLeaderBoardBtn;
     private DatabaseReference mDatabase;
     private ValueEventListener postListener;
     private final String TAG = "MainMenuActivity";
@@ -69,6 +69,7 @@ public class MainMenu extends AppCompatActivity {
         incomingTrailersButton = findViewById(R.id.incoming_trailers_button);
         bookingReportsButton = findViewById(R.id.booking_reports_button);
         chatSupportBtn = findViewById(R.id.chat_support_button);
+        rentalLeaderBoardBtn = findViewById(R.id.rentalLeaderBoardBtn);
         // Get current user email
         String currentUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         progressBar = findViewById(R.id.progressBar);
@@ -140,6 +141,8 @@ public class MainMenu extends AppCompatActivity {
             }
         });
 
+
+
         receiveTrailerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -161,6 +164,15 @@ public class MainMenu extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(MainMenu.this, IncomingTrailersActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        rentalLeaderBoardBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                Intent intent = new Intent(MainMenu.this, rentalLeaderBoard.class);
+//                startActivity(intent);
+                Toast.makeText(MainMenu.this, "Rental Leaderboard Coming Soon", Toast.LENGTH_SHORT).show();
             }
         });
 
